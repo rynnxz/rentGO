@@ -1,0 +1,49 @@
+:root {
+  --navy-900: #0B1F3A;
+  --navy-800: #132E54;
+  --primary-600: #1D4ED8;
+  --primary-700: #1E40AF;
+  --primary-100: #DBEAFE;
+  --primary-50: #EFF6FF;
+  --accent-500: #F59E0B;
+  --accent-600: #D97706;
+  --accent-50: #FFFBEB;
+  --slate-50: #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-600: #475569;
+  --slate-900: #0F172A;
+  --surface-white: #FFFFFF;
+}
+
+.slidev-layout {
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  color: var(--slate-900);
+  background-color: var(--slate-50);
+}
+
+.slidev-layout h1,
+.slidev-layout h2,
+.slidev-layout h3 {
+  color: var(--navy-900);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.rentgo-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  background-color: var(--accent-500);
+  color: var(--navy-900);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.rentgo-card {
+  background-color: var(--surface-white);
+  border: 1px solid var(--slate-200);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
