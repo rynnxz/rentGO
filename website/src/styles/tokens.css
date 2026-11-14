@@ -1,0 +1,48 @@
+/* ============================================================================
+   RentGo Design System Tokens (src/styles/tokens.css)
+   Palet warna dikunci sesuai spesifikasi Bagian 4.
+   Dilarang menggunakan nilai hex secara langsung di komponen React.
+   ============================================================================ */
+
+:root {
+  /* Core Brand Palette (Navy + Primary Blue + Road Signage Amber) */
+  --navy-900: #0B1F3A;
+  --primary-600: #1D4ED8;
+  --primary-700: #1E40AF;
+  --primary-100: #DBEAFE;
+  --primary-50: #EFF6FF;
+  --accent-500: #F59E0B;
+  --accent-600: #D97706;
+  --accent-50: #FFFBEB;
+
+  /* Neutral Slate Scale */
+  --slate-50: #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-400: #94A3B8;
+  --slate-600: #475569;
+  --slate-900: #0F172A;
+  --surface-white: #FFFFFF;
+
+  /* Semantic Feedback Colors (WCAG AA Verified Pairings) */
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --success-text: #14532D;
+
+  --danger: #DC2626;
+  --danger-bg: #FEE2E2;
+  --danger-text: #7F1D1D;
+
+  --info: #0D9488;
+  --info-bg: #CCFBF1;
+  --info-text: #115E59;
+
+  --warning-text: #92400E;
+
+  /* Geometry & Elevation Tokens */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-badge: 6px;
+  --shadow-subtle: 0 1px 2px 0 rgb(11 31 58 / 0.06);
+  --shadow-elevated: 0 10px 24px -6px rgb(11 31 58 / 0.12), 0 4px 8px -4px rgb(11 31 58 / 0.06);
+}

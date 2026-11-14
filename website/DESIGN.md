@@ -1,0 +1,26 @@
+# RentGo Design Direction (DESIGN.md)
+
+- **Product Identity:** RentGo - Sistem Manajemen Penyewaan Kendaraan (Mobil & Motor) untuk wilayah Kota Medan, Bandara Kualanamu, dan Sumatera Utara.
+- **Brand Character:** Terpercaya, cepat, transparan, dan rapi. Mengambil inspirasi visual dari rambu penunjuk jalan raya (biru navy tua `#0B1F3A` dipadukan dengan aksen kuning-amber `#F59E0B`).
+- **Dials:** `Dial: ENERGY 2 / RHYTHM 2 / MOTION 1`
+  - **ENERGY 2 (Balanced):** Kontras kuat antara header/hero `--navy-900` dengan bidang kerja `--slate-50` yang bersih dan terstruktur.
+  - **RHYTHM 2 (Consistent with breaks):** Variasi komposisi antarbagian pada halaman Landing (Hero split form -> Keunggulan operasional -> Grid armada unggulan -> Alur 3 langkah -> Tabel transparansi harga -> Accordion FAQ), sedangkan halaman Booking dan Admin menjaga kepadatan fungsional yang konsisten.
+  - **MOTION 1 (Hover & focus states only):** Transisi halus pada state `:hover`, `:active`, dan `:focus-visible` dengan dukungan penuh `@media (prefers-reduced-motion: reduce)`.
+- **Typography:** Plus Jakarta Sans (`400`, `500`, `600`, `700`) untuk keterbacaan optimal pada nominal Rupiah (`Rp 350.000`) dan nomor plat kendaraan.
+- **Color Palette (Locked):**
+  - `--navy-900`: `#0B1F3A`
+  - `--primary-600`: `#1D4ED8`
+  - `--primary-700`: `#1E40AF`
+  - `--primary-100`: `#DBEAFE`
+  - `--primary-50`: `#EFF6FF`
+  - `--accent-500`: `#F59E0B`
+  - `--accent-600`: `#D97706`
+  - `--accent-50`: `#FFFBEB`
+  - `--slate-50`: `#F8FAFC`
+  - `--slate-200`: `#E2E8F0`
+  - `--slate-400`: `#94A3B8`
+  - `--slate-600`: `#475569`
+  - `--slate-900`: `#0F172A`
+  - `--success`: `#16A34A`
+  - `--danger`: `#DC2626`
+  - `--info`: `#0D9488`

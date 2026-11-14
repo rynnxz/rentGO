@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" width="640" height="380" role="img" aria-label="Ilustrasi SUV RentGo">
+  <rect width="640" height="380" fill="#EFF6FF"/>
+  <rect x="24" y="24" width="136" height="32" rx="6" fill="#0B1F3A"/>
+  <text x="92" y="45" fill="#F59E0B" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle">SUV TANGGUH</text>
+  <line x1="50" y1="306" x2="590" y2="306" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <rect x="166" y="128" width="240" height="8" rx="4" fill="#0B1F3A"/>
+  <path d="M106 238 L138 152 Q148 136 176 136 L406 136 Q432 136 452 166 L530 206 Q548 216 548 238 L548 274 Q548 286 534 286 L104 286 Q92 286 92 274 L92 250 Q92 238 106 238 Z" fill="#1E40AF" stroke="#0B1F3A" stroke-width="5"/>
+  <rect x="150" y="150" width="88" height="50" rx="6" fill="#DBEAFE"/>
+  <rect x="250" y="150" width="88" height="50" rx="6" fill="#DBEAFE"/>
+  <path d="M350 150 L412 150 Q428 150 442 172 L462 200 L350 200 Z" fill="#DBEAFE"/>
+  <rect x="520" y="220" width="24" height="16" rx="4" fill="#F59E0B"/>
+  <circle cx="194" cy="288" r="40" fill="#0B1F3A"/>
+  <circle cx="194" cy="288" r="19" fill="#E2E8F0"/>
+  <circle cx="458" cy="288" r="40" fill="#0B1F3A"/>
+  <circle cx="458" cy="288" r="19" fill="#E2E8F0"/>
+  <text x="320" y="352" fill="#475569" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">Ilustrasi Placeholder SUV Rute Berastagi &amp; Danau Toba</text>
+</svg>
