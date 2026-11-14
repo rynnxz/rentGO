@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" role="img" aria-label="Ilustrasi Armada Rute Medan - Kualanamu - Berastagi">
+  <rect width="720" height="440" rx="16" fill="#0B1F3A"/>
+  <!-- Road signage header motif -->
+  <rect x="32" y="28" width="248" height="44" rx="8" fill="#16A34A" stroke="#FFFFFF" stroke-width="2"/>
+  <text x="52" y="55" fill="#FFFFFF" font-family="sans-serif" font-size="14" font-weight="700">KUALANAMU 28 KM  |  BERASTAGI 66 KM</text>
+  <rect x="492" y="28" width="196" height="44" rx="8" fill="#F59E0B"/>
+  <text x="590" y="55" fill="#0B1F3A" font-family="sans-serif" font-size="14" font-weight="800" text-anchor="middle">STOK REAL-TIME WIB</text>
+  <!-- Stylized highway & hills -->
+  <path d="M0 300 Q180 230 360 280 T720 250 L720 440 L0 440 Z" fill="#1E40AF" opacity="0.35"/>
+  <rect x="0" y="330" width="720" height="110" fill="#0F172A"/>
+  <line x1="40" y1="382" x2="140" y2="382" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+  <line x1="220" y1="382" x2="320" y2="382" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+  <line x1="400" y1="382" x2="500" y2="382" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+  <line x1="580" y1="382" x2="680" y2="382" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+  <!-- Main featured MPV silhouette -->
+  <path d="M136 292 L176 196 Q190 174 224 174 L478 174 Q512 174 536 208 L596 258 Q612 272 612 292 L612 322 Q612 334 596 334 L132 334 Q120 334 120 320 L120 304 Q120 292 136 292 Z" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="5"/>
+  <rect x="194" y="190" width="96" height="54" rx="6" fill="#DBEAFE"/>
+  <rect x="304" y="190" width="102" height="54" rx="6" fill="#DBEAFE"/>
+  <path d="M420 190 L486 190 Q506 190 522 214 L542 244 L420 244 Z" fill="#DBEAFE"/>
+  <rect x="148" y="276" width="430" height="10" rx="5" fill="#1D4ED8"/>
+  <rect x="582" y="270" width="24" height="16" rx="4" fill="#F59E0B"/>
+  <circle cx="228" cy="334" r="38" fill="#1D4ED8" stroke="#FFFFFF" stroke-width="4"/>
+  <circle cx="228" cy="334" r="16" fill="#FFFFFF"/>
+  <circle cx="512" cy="334" r="38" fill="#1D4ED8" stroke="#FFFFFF" stroke-width="4"/>
+  <circle cx="512" cy="334" r="16" fill="#FFFFFF"/>
+</svg>
