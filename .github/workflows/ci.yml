@@ -1,0 +1,38 @@
+name: RentGo CI
+
+on:
+  push:
+    branches: [main, "inc-*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify-website:
+    name: Typecheck & Unit Tests (website)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./website
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Run unit tests (Vitest)
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
