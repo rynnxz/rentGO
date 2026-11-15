@@ -97,10 +97,19 @@ describe("Zod Validation & Host Surface Resolution", () => {
       }).surface,
     ).toBe("admin");
 
-    // In production on rentgo.my.id, ?site=admin must be ignored!
+    // In production on rentgo.my.id or www.rentgo.my.id, ?site=admin must be ignored!
     expect(
       resolveSurfaceFromRequest({
         host: "rentgo.my.id",
+        siteQuery: "admin",
+        nodeEnv: "production",
+        rootDomain: "rentgo.my.id",
+      }).surface,
+    ).toBe("landing");
+
+    expect(
+      resolveSurfaceFromRequest({
+        host: "www.rentgo.my.id",
         siteQuery: "admin",
         nodeEnv: "production",
         rootDomain: "rentgo.my.id",

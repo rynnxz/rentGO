@@ -11,7 +11,12 @@ export interface VerifiedIdentity {
   avatar_url: string | null;
 }
 
+const GOOGLE_SECURETOKEN_CERTS_URL =
+  "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+
 let cachedAdminApp: App | null = null;
+let cachedCerts: { certs: Record<string, string>; expiresAt: number } | null =
+  null;
 
 function getFirebaseAdminAuth(): Auth | null {
   const env = getEnv();
@@ -76,7 +81,14 @@ export function verifySignedDevSessionCookie(
     .createHmac("sha256", getHmacSecret())
     .update(encoded)
     .digest("base64url");
-  if (sig !== expectedSig) return null;
+  const sigBuf = Buffer.from(sig, "utf8");
+  const expectedBuf = Buffer.from(expectedSig, "utf8");
+  if (
+    sigBuf.length !== expectedBuf.length ||
+    !crypto.timingSafeEqual(sigBuf, expectedBuf)
+  ) {
+    return null;
+  }
   try {
     const parsed = JSON.parse(
       Buffer.from(encoded, "base64url").toString("utf8"),
@@ -89,6 +101,110 @@ export function verifySignedDevSessionCookie(
       email: parsed.email,
       full_name: parsed.full_name,
       avatar_url: parsed.avatar_url ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchGoogleSecureTokenCerts(): Promise<Record<string, string> | null> {
+  if (cachedCerts && Date.now() < cachedCerts.expiresAt) {
+    return cachedCerts.certs;
+  }
+  try {
+    const res = await fetch(GOOGLE_SECURETOKEN_CERTS_URL, {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const certs = (await res.json()) as Record<string, string>;
+    const cacheControl = res.headers.get("cache-control") ?? "";
+    const maxAgeMatch = /max-age=(\d+)/i.exec(cacheControl);
+    const maxAgeSec = maxAgeMatch ? Number(maxAgeMatch[1]) : 3600;
+    cachedCerts = {
+      certs,
+      expiresAt: Date.now() + Math.max(60, maxAgeSec) * 1000,
+    };
+    return certs;
+  } catch {
+    return null;
+  }
+}
+
+export function verifyFirebaseIdTokenJwtWithCerts(params: {
+  idToken: string;
+  certs: Record<string, string>;
+  projectId: string;
+  nowSeconds?: number;
+}): VerifiedIdentity | null {
+  const parts = params.idToken.split(".");
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, sigB64] = parts;
+  if (!headerB64 || !payloadB64 || !sigB64) return null;
+
+  try {
+    const header = JSON.parse(
+      Buffer.from(headerB64, "base64url").toString("utf8"),
+    ) as { alg?: string; kid?: string };
+    if (header.alg !== "RS256" || !header.kid) return null;
+
+    const certPem = params.certs[header.kid];
+    if (!certPem) return null;
+
+    const verifier = crypto.createVerify("RSA-SHA256");
+    verifier.update(`${headerB64}.${payloadB64}`);
+    verifier.end();
+    const signature = Buffer.from(sigB64, "base64url");
+    if (!verifier.verify(certPem, signature)) return null;
+
+    const payload = JSON.parse(
+      Buffer.from(payloadB64, "base64url").toString("utf8"),
+    ) as {
+      aud?: string;
+      iss?: string;
+      sub?: string;
+      exp?: number;
+      iat?: number;
+      auth_time?: number;
+      email?: string;
+      name?: string;
+      picture?: string;
+    };
+
+    const nowSec = params.nowSeconds ?? Math.floor(Date.now() / 1000);
+    const expectedIss = `https://securetoken.google.com/${params.projectId}`;
+    if (payload.aud !== params.projectId || payload.iss !== expectedIss) {
+      return null;
+    }
+    if (
+      typeof payload.sub !== "string" ||
+      payload.sub.length === 0 ||
+      payload.sub.length > 128
+    ) {
+      return null;
+    }
+    if (typeof payload.exp !== "number" || payload.exp <= nowSec) {
+      return null;
+    }
+    if (typeof payload.iat !== "number" || payload.iat > nowSec + 300) {
+      return null;
+    }
+    if (
+      typeof payload.auth_time === "number" &&
+      payload.auth_time > nowSec + 300
+    ) {
+      return null;
+    }
+    if (typeof payload.email !== "string" || !payload.email.trim()) {
+      return null;
+    }
+
+    const email = payload.email.trim().toLowerCase();
+    return {
+      firebase_uid: payload.sub,
+      email,
+      full_name:
+        payload.name?.trim() || email.split("@")[0] || "Pengguna RentGo",
+      avatar_url: payload.picture ?? null,
     };
   } catch {
     return null;
@@ -196,12 +312,27 @@ export async function verifyIncomingIdTokenAndCreateSession(
     };
   }
 
-  // 3. Verify live Firebase ID token via Firebase Identity Toolkit REST API (project: rentgo-medan)
-  if (env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-    const restIdentity = await verifyIdTokenViaFirebaseRest(
+  // 3. Verify live Firebase ID token JWT signature directly against Google public x509 certs
+  const projectId = env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "rentgo-medan";
+  const certs = await fetchGoogleSecureTokenCerts();
+  if (certs) {
+    const jwtIdentity = verifyFirebaseIdTokenJwtWithCerts({
       idToken,
-      env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    );
+      certs,
+      projectId,
+    });
+    if (jwtIdentity) {
+      return {
+        identity: jwtIdentity,
+        sessionCookieValue: createSignedDevSessionCookie(jwtIdentity),
+      };
+    }
+  }
+
+  // 4. Fallback: Verify live Firebase ID token via Firebase Identity Toolkit REST API
+  const apiKey = env.NEXT_PUBLIC_FIREBASE_API_KEY || env.FIREBASE_API_KEY;
+  if (apiKey) {
+    const restIdentity = await verifyIdTokenViaFirebaseRest(idToken, apiKey);
     if (restIdentity) {
       return {
         identity: restIdentity,

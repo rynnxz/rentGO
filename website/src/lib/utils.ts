@@ -104,7 +104,7 @@ export function resolveSurfaceFromRequest(params: {
   // Strictly disabled on production custom domain
   const isProductionCustomDomain =
     params.nodeEnv === "production" &&
-    cleanHost === rootBase &&
+    (cleanHost === rootBase || cleanHost === `www.${rootBase}`) &&
     !cleanHost.endsWith(".vercel.app") &&
     cleanHost !== "localhost";
 

@@ -11,7 +11,9 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import {
+  getFirebaseAuthErrorMessage,
   registerWithEmailPasswordClient,
+  resolveFirebaseClientConfig,
   signInWithEmailPasswordClient,
   signInWithGooglePopupClient,
 } from "@/lib/firebase-client";
@@ -69,19 +71,7 @@ export function AuthControls({
       await completeSessionLogin(token);
     } catch (err) {
       setLoading(false);
-      const msg = err instanceof Error ? err.message : "";
-      if (
-        msg.includes("auth/popup-closed-by-user") ||
-        msg.includes("auth/cancelled-popup-request")
-      ) {
-        setErrorMsg("Jendela login Google ditutup sebelum memilih akun.");
-        return;
-      }
-      setErrorMsg(
-        msg
-          ? `Gagal masuk via Google (${msg}). Silakan coba lagi atau gunakan Email/Password di bawah.`
-          : "Popup Google Sign-In dibatalkan atau diblokir oleh browser.",
-      );
+      setErrorMsg(getFirebaseAuthErrorMessage(err, "google"));
     }
   }
 
@@ -94,21 +84,35 @@ export function AuthControls({
     setLoading(true);
     setErrorMsg(null);
 
+    const config = await resolveFirebaseClientConfig();
+    if (!config) {
+      if (process.env.NODE_ENV !== "production") {
+        const cleanEmail = email.trim().toLowerCase();
+        await completeSessionLogin(
+          `firebase-email:${JSON.stringify({
+            uid: `fb-email-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
+            email: cleanEmail,
+            name: fullName.trim() || cleanEmail.split("@")[0],
+          })}`,
+        );
+        return;
+      }
+      setLoading(false);
+      setErrorMsg(
+        "Konfigurasi Firebase Auth belum tersedia pada server produksi.",
+      );
+      return;
+    }
+
     try {
       const token =
         authMode === "register"
           ? await registerWithEmailPasswordClient(email, password, fullName)
           : await signInWithEmailPasswordClient(email, password);
       await completeSessionLogin(token);
-    } catch {
-      const cleanEmail = email.trim().toLowerCase();
-      await completeSessionLogin(
-        `firebase-email:${JSON.stringify({
-          uid: `fb-email-${cleanEmail.replace(/[^a-z0-9]/g, "-")}`,
-          email: cleanEmail,
-          name: fullName.trim() || cleanEmail.split("@")[0],
-        })}`,
-      );
+    } catch (err) {
+      setLoading(false);
+      setErrorMsg(getFirebaseAuthErrorMessage(err, "email"));
     }
   }
 
@@ -217,7 +221,7 @@ export function AuthControls({
         <span>{loading ? "Memproses..." : "Masuk / Daftar"}</span>
       </button>
 
-      {/* Native HTML <dialog> for Firebase Auth (Email/Password + Google Sign-In + Quick Demo) */}
+      {/* Native HTML <dialog> for Firebase Auth (Email/Password + Google Sign-In) */}
       <dialog
         ref={dialogRef}
         aria-labelledby={`${instanceId}-dialog-title`}
@@ -418,101 +422,6 @@ export function AuthControls({
               </span>
             </button>
           </form>
-
-          {/* 3. Quick 1-Click Demo Accounts for Instant Grading & E2E Tests */}
-          <div className="space-y-2 border-t pt-3">
-            <p
-              style={{ color: "var(--fg-secondary)" }}
-              className="text-[11px] font-bold uppercase tracking-wider"
-            >
-              Akses Cepat Akun Pengujian (1-Klik Tanpa Ketik):
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                data-testid="emulator-login-customer"
-                disabled={loading}
-                onClick={() =>
-                  completeSessionLogin(
-                    `emulator-google:${JSON.stringify({
-                      uid: "firebase-cust-nadia",
-                      email: "nadia.siregar@gmail.com",
-                      name: "Nadia Siregar",
-                    })}`,
-                  )
-                }
-                style={{
-                  backgroundColor: "var(--secondary-50)",
-                  color: "var(--fg)",
-                  borderColor: "var(--secondary-600)",
-                  borderRadius: "var(--radius-control)",
-                }}
-                className="flex min-h-[46px] w-full flex-col justify-center border px-3 py-2 text-left text-xs font-bold hover:opacity-90"
-              >
-                <span className="flex w-full items-center justify-between">
-                  <span>Nadia Siregar</span>
-                  <span
-                    style={{
-                      backgroundColor: "var(--secondary-100)",
-                      color: "var(--secondary-700)",
-                      borderRadius: "var(--radius-badge)",
-                    }}
-                    className="px-1.5 py-0.5 text-[10px]"
-                  >
-                    Customer
-                  </span>
-                </span>
-                <span
-                  style={{ color: "var(--fg-secondary)" }}
-                  className="break-all text-[10px] font-normal"
-                >
-                  nadia.siregar@gmail.com
-                </span>
-              </button>
-
-              <button
-                type="button"
-                data-testid="emulator-login-admin"
-                disabled={loading}
-                onClick={() =>
-                  completeSessionLogin(
-                    `emulator-google:${JSON.stringify({
-                      uid: "firebase-admin-akbar",
-                      email: "akbarriansyah339@gmail.com",
-                      name: "Akbar Riansyah",
-                    })}`,
-                  )
-                }
-                style={{
-                  backgroundColor: "var(--accent-50)",
-                  color: "var(--fg)",
-                  borderColor: "var(--accent-500)",
-                  borderRadius: "var(--radius-control)",
-                }}
-                className="flex min-h-[46px] w-full flex-col justify-center border px-3 py-2 text-left text-xs font-bold hover:opacity-90"
-              >
-                <span className="flex w-full items-center justify-between">
-                  <span>Akbar Riansyah</span>
-                  <span
-                    style={{
-                      backgroundColor: "var(--accent-500)",
-                      color: "var(--on-amber-fg)",
-                      borderRadius: "var(--radius-badge)",
-                    }}
-                    className="px-1.5 py-0.5 text-[10px]"
-                  >
-                    Admin
-                  </span>
-                </span>
-                <span
-                  style={{ color: "var(--fg-secondary)" }}
-                  className="break-all text-[10px] font-normal"
-                >
-                  akbarriansyah339@gmail.com
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
       </dialog>
     </>

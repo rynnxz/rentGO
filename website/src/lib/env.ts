@@ -8,6 +8,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_BOOK_URL: z.string().url().default("http://localhost:3000/book"),
   NEXT_PUBLIC_ADMIN_URL: z.string().url().default("http://localhost:3000/admin"),
   NEXT_PUBLIC_FIREBASE_API_KEY: z.string().optional().default(""),
+  FIREBASE_API_KEY: z.string().optional().default(""),
   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z
     .string()
     .optional()

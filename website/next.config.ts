@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
@@ -22,7 +18,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; connect-src 'self' https://*.googleapis.com https://*.supabase.co https://*.firebaseio.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;",
+              "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; connect-src 'self' https://*.googleapis.com https://*.supabase.co https://*.firebaseio.com https://*.firebaseapp.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; frame-ancestors 'self' http://localhost:* http://127.0.0.1:* https://*.vercel.app https://rentgo.my.id https://*.rentgo.my.id;",
           },
         ],
       },
@@ -31,3 +27,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
