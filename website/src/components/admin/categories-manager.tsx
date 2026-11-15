@@ -321,17 +321,17 @@ export function CategoriesManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-md overflow-hidden border p-0 text-left"
+        className="m-auto w-[calc(100vw-2rem)] max-w-md overflow-hidden border p-0 text-left open:flex open:flex-col"
       >
-        <form onSubmit={handleSave}>
+        <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
           <div
             style={{
               backgroundColor: "var(--brand-navy-deep)",
               color: "var(--on-dark-fg)",
             }}
-            className="flex items-center justify-between gap-3 border-b px-6 py-4"
+            className="flex shrink-0 items-center justify-between gap-3 border-b px-6 py-4"
           >
-            <div>
+            <div className="min-w-0">
               <span
                 style={{
                   backgroundColor: "var(--accent-500)",
@@ -344,7 +344,7 @@ export function CategoriesManager({
               </span>
               <h2
                 id="category-dialog-title"
-                className="mt-1 text-lg font-extrabold"
+                className="mt-1 truncate text-lg font-extrabold"
               >
                 {editing ? "Edit Kategori Kendaraan" : "Tambah Kategori Baru"}
               </h2>
@@ -357,12 +357,12 @@ export function CategoriesManager({
                 color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+              className="min-h-[36px] shrink-0 px-3 py-1.5 text-xs font-bold hover:bg-white/20"
             >
               Tutup
             </button>
           </div>
-          <div className="space-y-4 p-6">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
 
           {errorMsg ? (
             <div
@@ -445,7 +445,12 @@ export function CategoriesManager({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t pt-4">
+          </div>
+
+          <div
+            style={{ backgroundColor: "var(--surface-elevated)" }}
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-6 py-4"
+          >
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -470,7 +475,6 @@ export function CategoriesManager({
             >
               {loading ? "Menyimpan..." : "Simpan Kategori"}
             </button>
-          </div>
           </div>
         </form>
       </dialog>

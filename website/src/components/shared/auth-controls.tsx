@@ -229,7 +229,7 @@ export function AuthControls({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-md border p-6 text-left"
+        className="m-auto w-[calc(100vw-2rem)] max-w-md overscroll-contain border p-6 text-left"
       >
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-2">
@@ -358,7 +358,7 @@ export function AuthControls({
               </div>
             ) : null}
 
-            <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="grid gap-2.5 *:min-w-0 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor={`${instanceId}-email-input`}

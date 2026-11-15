@@ -368,17 +368,17 @@ export function MaintenanceManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-lg overflow-hidden border p-0 text-left"
+        className="m-auto w-[calc(100vw-2rem)] max-w-lg overflow-hidden border p-0 text-left open:flex open:flex-col"
       >
-        <form onSubmit={handleCreate}>
+        <form onSubmit={handleCreate} className="flex min-h-0 flex-1 flex-col">
           <div
             style={{
               backgroundColor: "var(--brand-navy-deep)",
               color: "var(--on-dark-fg)",
             }}
-            className="flex items-center justify-between gap-3 border-b px-6 py-4"
+            className="flex shrink-0 items-center justify-between gap-3 border-b px-6 py-4"
           >
-            <div>
+            <div className="min-w-0">
               <span
                 style={{
                   backgroundColor: "var(--accent-500)",
@@ -391,7 +391,7 @@ export function MaintenanceManager({
               </span>
               <h2
                 id="maint-dialog-title"
-                className="mt-1 text-lg font-extrabold"
+                className="mt-1 truncate text-lg font-extrabold"
               >
                 Catat Jadwal Servis / Perawatan Armada
               </h2>
@@ -404,12 +404,12 @@ export function MaintenanceManager({
                 color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+              className="min-h-[36px] shrink-0 px-3 py-1.5 text-xs font-bold hover:bg-white/20"
             >
               Tutup
             </button>
           </div>
-          <div className="space-y-4 p-6">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
 
           {errorMsg ? (
             <div
@@ -465,7 +465,7 @@ export function MaintenanceManager({
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 *:min-w-0 sm:grid-cols-2">
             <div>
               <label htmlFor="m-start" className="block text-xs font-semibold">
                 Tanggal Mulai
@@ -496,7 +496,7 @@ export function MaintenanceManager({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 *:min-w-0 sm:grid-cols-2">
             <div>
               <label htmlFor="m-cost" className="block text-xs font-semibold">
                 Estimasi Biaya (Rp)
@@ -546,7 +546,12 @@ export function MaintenanceManager({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t pt-4">
+          </div>
+
+          <div
+            style={{ backgroundColor: "var(--surface-elevated)" }}
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-6 py-4"
+          >
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -572,7 +577,6 @@ export function MaintenanceManager({
             >
               {loading ? "Menyimpan..." : "Simpan Jadwal"}
             </button>
-          </div>
           </div>
         </form>
       </dialog>

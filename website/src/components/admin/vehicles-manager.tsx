@@ -13,6 +13,20 @@ import type {
   VehicleWithCategory,
 } from "@/lib/types";
 
+const PRESET_VEHICLE_IMAGE_VALUES = new Set([
+  "/vehicles/Honda-Brio-Satya-RS.jfif",
+  "/vehicles/Toyota-Agya-GR-Sport.jpg",
+  "/vehicles/Toyota-Avanza-1.5-G-CVT.png",
+  "/vehicles/Daihatsu-Xenia-1.3-R-MT.png",
+  "/vehicles/yamaha-nmax-155-connected.png",
+  "/vehicles/honda-vario-160-abs.jfif",
+  "/vehicles/city-car.svg",
+  "/vehicles/mpv.svg",
+  "/vehicles/suv.svg",
+  "/vehicles/van.svg",
+  "/vehicles/scooter.svg",
+]);
+
 export function VehiclesManager({
   initialVehicles,
   categories,
@@ -586,17 +600,17 @@ export function VehiclesManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-2xl overflow-hidden border p-0 text-left"
+        className="m-auto w-[calc(100vw-2rem)] max-w-2xl overflow-hidden border p-0 text-left open:flex open:flex-col"
       >
-        <form onSubmit={handleSave}>
+        <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
           <div
             style={{
               backgroundColor: "var(--brand-navy-deep)",
               color: "var(--on-dark-fg)",
             }}
-            className="flex items-center justify-between gap-3 border-b px-6 py-4"
+            className="flex shrink-0 items-center justify-between gap-3 border-b px-6 py-4"
           >
-            <div>
+            <div className="min-w-0">
               <span
                 style={{
                   backgroundColor: "var(--accent-500)",
@@ -609,7 +623,7 @@ export function VehiclesManager({
               </span>
               <h2
                 id="vehicle-dialog-title"
-                className="mt-1 text-lg font-extrabold"
+                className="mt-1 truncate text-lg font-extrabold"
               >
                 {editing
                   ? `Edit Kendaraan (${editing.plate_number})`
@@ -624,12 +638,12 @@ export function VehiclesManager({
                 color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+              className="min-h-[36px] shrink-0 px-3 py-1.5 text-xs font-bold hover:bg-white/20"
             >
               Tutup
             </button>
           </div>
-          <div className="space-y-4 p-6">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
 
           {errorMsg ? (
             <div
@@ -646,7 +660,7 @@ export function VehiclesManager({
             </div>
           ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 *:min-w-0 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="v-category"
@@ -789,69 +803,78 @@ export function VehiclesManager({
               </select>
             </div>
 
-            <div>
-              <label htmlFor="v-seats" className="block text-xs font-semibold">
-                Kapasitas Kursi
-              </label>
-              <input
-                id="v-seats"
-                type="number"
-                required
-                min={2}
-                max={20}
-                value={seats}
-                onChange={(e) => setSeats(Number(e.target.value))}
-                style={{ borderRadius: "var(--radius-control)" }}
-                className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm tabular-nums"
-              />
+            <div className="grid gap-4 *:min-w-0 sm:col-span-2 sm:grid-cols-3">
+              <div>
+                <label htmlFor="v-seats" className="block text-xs font-semibold">
+                  Kapasitas Kursi
+                </label>
+                <input
+                  id="v-seats"
+                  type="number"
+                  required
+                  min={2}
+                  max={20}
+                  value={seats}
+                  onChange={(e) => setSeats(Number(e.target.value))}
+                  style={{ borderRadius: "var(--radius-control)" }}
+                  className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="v-price" className="block text-xs font-semibold">
+                  Tarif Sewa Harian (Rp)
+                </label>
+                <input
+                  id="v-price"
+                  type="number"
+                  required
+                  min={50000}
+                  step={5000}
+                  value={dailyPrice}
+                  onChange={(e) => setDailyPrice(Number(e.target.value))}
+                  style={{ borderRadius: "var(--radius-control)" }}
+                  className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="v-status" className="block text-xs font-semibold">
+                  Status Operasional
+                </label>
+                <select
+                  id="v-status"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as VehicleStatus)}
+                  style={{ borderRadius: "var(--radius-control)" }}
+                  className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm"
+                >
+                  <option value="active">Aktif</option>
+                  <option value="maintenance">Perawatan</option>
+                  <option value="inactive">Nonaktif</option>
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="v-price" className="block text-xs font-semibold">
-                Tarif Sewa Harian (Rp)
-              </label>
-              <input
-                id="v-price"
-                type="number"
-                required
-                min={50000}
-                step={5000}
-                value={dailyPrice}
-                onChange={(e) => setDailyPrice(Number(e.target.value))}
-                style={{ borderRadius: "var(--radius-control)" }}
-                className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm tabular-nums"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="v-status" className="block text-xs font-semibold">
-                Status Operasional
-              </label>
-              <select
-                id="v-status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as VehicleStatus)}
-                style={{ borderRadius: "var(--radius-control)" }}
-                className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm"
-              >
-                <option value="active">Aktif</option>
-                <option value="maintenance">Perawatan</option>
-                <option value="inactive">Nonaktif</option>
-              </select>
-            </div>
-
-            <div>
+            <div className="sm:col-span-2">
               <label htmlFor="v-image" className="block text-xs font-semibold">
                 Foto Unit Kendaraan / Placeholder
               </label>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-2 sm:flex-nowrap">
                 <select
                   id="v-image"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   style={{ borderRadius: "var(--radius-control)" }}
-                  className="min-h-[44px] flex-1 border px-3 py-2 text-sm"
+                  className="min-h-[44px] min-w-0 flex-1 border px-3 py-2 text-sm"
                 >
+                  {imageUrl && !PRESET_VEHICLE_IMAGE_VALUES.has(imageUrl) ? (
+                    <optgroup label="Foto Cloud / URL Kustom">
+                      <option value={imageUrl}>
+                        Foto Cloud ({imageUrl})
+                      </option>
+                    </optgroup>
+                  ) : null}
                   <optgroup label="Foto Unit Kendaraan Asli (public/vehicles)">
                     <option value="/vehicles/Honda-Brio-Satya-RS.jfif">
                       Foto Honda Brio Satya RS
@@ -897,10 +920,10 @@ export function VehiclesManager({
                     borderColor: "var(--secondary-600)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-1 border px-3 py-2 text-xs font-bold"
+                  className="inline-flex min-h-[44px] shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border px-3.5 py-2 text-xs font-bold"
                 >
-                  <Upload className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{uploading ? "..." : "Upload Cloud"}</span>
+                  <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{uploading ? "Mengunggah..." : "Upload Cloud"}</span>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,.jfif"
@@ -926,8 +949,12 @@ export function VehiclesManager({
               className="mt-1 w-full border px-3 py-2 text-sm"
             />
           </div>
+          </div>
 
-          <div className="flex items-center justify-end gap-2 border-t pt-4">
+          <div
+            style={{ backgroundColor: "var(--surface-elevated)" }}
+            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-6 py-4"
+          >
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -953,7 +980,6 @@ export function VehiclesManager({
             >
               {loading ? "Menyimpan..." : "Simpan Kendaraan"}
             </button>
-          </div>
           </div>
         </form>
       </dialog>
