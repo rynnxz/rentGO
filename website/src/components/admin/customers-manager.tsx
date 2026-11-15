@@ -247,8 +247,8 @@ export function CustomersManager({
                         {u.is_active ? "Aktif" : "Dibekukan"}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="min-w-[210px] px-4 py-3 text-right">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           type="button"
                           disabled={loading}
@@ -258,14 +258,15 @@ export function CustomersManager({
                             })
                           }
                           style={{
-                            backgroundColor: "var(--slate-100)",
-                            color: "var(--slate-900)",
+                            backgroundColor: "var(--primary-50)",
+                            color: "var(--primary-700)",
+                            borderColor: "var(--primary-600)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1 px-3 py-1.5 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
                           <ShieldCheck
-                            className="h-3.5 w-3.5"
+                            className="h-3.5 w-3.5 shrink-0"
                             aria-hidden="true"
                           />
                           <span>
@@ -286,18 +287,21 @@ export function CustomersManager({
                           style={{
                             backgroundColor: u.is_active
                               ? "var(--danger-bg)"
-                              : "var(--success-bg)",
+                              : "var(--secondary-50)",
                             color: u.is_active
                               ? "var(--danger-text)"
-                              : "var(--success-text)",
+                              : "var(--secondary-700)",
+                            borderColor: u.is_active
+                              ? "var(--danger)"
+                              : "var(--secondary-600)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1 px-3 py-1.5 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
                           {u.is_active ? (
                             <>
                               <UserX
-                                className="h-3.5 w-3.5"
+                                className="h-3.5 w-3.5 shrink-0"
                                 aria-hidden="true"
                               />
                               <span>Nonaktifkan</span>
@@ -305,7 +309,7 @@ export function CustomersManager({
                           ) : (
                             <>
                               <UserCheck
-                                className="h-3.5 w-3.5"
+                                className="h-3.5 w-3.5 shrink-0"
                                 aria-hidden="true"
                               />
                               <span>Aktifkan</span>

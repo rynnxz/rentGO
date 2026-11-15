@@ -9,7 +9,9 @@ out/
 **/out/
 
 # Local runtime data & uploads
+.data/
 website/.data/
+public/uploads/
 website/public/uploads/
 
 # Environment variables (NEVER commit secrets)
@@ -18,13 +20,17 @@ website/public/uploads/
 !.env.example
 **/!.env.example
 
-# Testing & Playwright artifacts
+# Testing, Vercel & Slidev build artifacts
 coverage/
 **/coverage/
 playwright-report/
 **/playwright-report/
 test-results/
 **/test-results/
+.vercel/
+**/.vercel/
+slidev/dist/
+*.log
 
 # TypeScript & OS
 *.tsbuildinfo

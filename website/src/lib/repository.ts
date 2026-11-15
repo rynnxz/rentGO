@@ -2,7 +2,11 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { getAdminEmails } from "./env";
+import { getAdminEmails, hasSupabaseServiceCredentials } from "./env";
+import {
+  fetchCloudDatabaseSnapshot,
+  getSupabaseServiceClient,
+} from "./supabase-server";
 import { calculateBookingPrice, generateBookingCode } from "./pricing";
 import {
   filterAvailableVehicles,
@@ -146,7 +150,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "City car lincah dengan transmisi CVT halus, sensor parkir, dan head unit layar sentuh untuk jalanan pusat Kota Medan.",
-        image_url: "/vehicles/city-car.svg",
+        image_url: "/vehicles/Honda-Brio-Satya-RS.jfif",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -166,7 +170,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "Hatchback irit BBM dengan kabin ergonomis, cocok untuk mobilitas harian maupun perjalanan singkat dari Stasiun Medan.",
-        image_url: "/vehicles/city-car.svg",
+        image_url: "/vehicles/Toyota-Agya-GR-Sport.jpg",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -186,7 +190,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "MPV 7 kursi dengan AC double blower dingin, ruang bagasi lega untuk koper Bandara Kualanamu, dan konsumsi BBM efisien.",
-        image_url: "/vehicles/mpv.svg",
+        image_url: "/vehicles/Toyota-Avanza-1.5-G-CVT.png",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -246,7 +250,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "Pilihan MPV manual ekonomis dengan daya angkut 7 penumpang dan biaya sewa harian paling terjangkau.",
-        image_url: "/vehicles/mpv.svg",
+        image_url: "/vehicles/Daihatsu-Xenia-1.3-R-MT.png",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -346,7 +350,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "Skutik 155cc posisi duduk rileks, bagasi muat helm, lengkap dengan 2 helm SNI dan jas hujan.",
-        image_url: "/vehicles/scooter.svg",
+        image_url: "/vehicles/yamaha-nmax-155-connected.png",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -366,7 +370,7 @@ export function createInitialSeedState(): LocalDatabaseState {
         status: "active",
         description:
           "Motor matik responsif dengan rem ABS dan soket pengisi daya USB untuk keliling kuliner Kota Medan.",
-        image_url: "/vehicles/scooter.svg",
+        image_url: "/vehicles/honda-vario-160-abs.jfif",
         deleted_at: null,
         created_at: now,
         updated_at: now,
@@ -534,8 +538,74 @@ function getStoreFilePath(): string {
   return path.join(process.cwd(), ".data", "rentgo-local.json");
 }
 
+const REAL_VEHICLE_PHOTO_MAP: Record<string, string> = {
+  "33333333-3333-4333-8333-333333333301": "/vehicles/Honda-Brio-Satya-RS.jfif",
+  "33333333-3333-4333-8333-333333333302": "/vehicles/Toyota-Agya-GR-Sport.jpg",
+  "33333333-3333-4333-8333-333333333303": "/vehicles/Toyota-Avanza-1.5-G-CVT.png",
+  "33333333-3333-4333-8333-333333333306": "/vehicles/Daihatsu-Xenia-1.3-R-MT.png",
+  "33333333-3333-4333-8333-333333333311": "/vehicles/yamaha-nmax-155-connected.png",
+  "33333333-3333-4333-8333-333333333312": "/vehicles/honda-vario-160-abs.jfif",
+};
+
+function syncRealVehiclePhotos(state: LocalDatabaseState): boolean {
+  let changed = false;
+  for (const v of state.vehicles) {
+    const mappedPhoto = REAL_VEHICLE_PHOTO_MAP[v.id];
+    if (mappedPhoto && v.image_url !== mappedPhoto && v.image_url?.endsWith(".svg")) {
+      v.image_url = mappedPhoto;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 // In-process async mutex to serialize transactional operations (prevents race conditions in concurrency tests)
 let transactionLock: Promise<void> = Promise.resolve();
+let lastCloudFetchAt = 0;
+let cachedCloudState: LocalDatabaseState | null = null;
+
+async function syncStateToSupabase(state: LocalDatabaseState): Promise<void> {
+  if (customDataFilePath || !hasSupabaseServiceCredentials()) return;
+  const sb = getSupabaseServiceClient();
+  if (!sb) return;
+  try {
+    if (state.vehicle_categories.length > 0) {
+      await sb
+        .from("vehicle_categories")
+        .upsert(state.vehicle_categories, { onConflict: "id" });
+    }
+    if (state.users.length > 0) {
+      await sb.from("users").upsert(state.users, { onConflict: "id" });
+    }
+    if (state.vehicles.length > 0) {
+      await sb.from("vehicles").upsert(state.vehicles, { onConflict: "id" });
+    }
+    if (state.bookings.length > 0) {
+      const bookingRows = state.bookings.map(
+        ({ total_days: _td, ...rest }) => rest,
+      );
+      await sb.from("bookings").upsert(bookingRows, { onConflict: "id" });
+    }
+    if (state.payments.length > 0) {
+      await sb.from("payments").upsert(state.payments, { onConflict: "id" });
+    }
+    if (state.maintenance_logs.length > 0) {
+      await sb
+        .from("maintenance_logs")
+        .upsert(state.maintenance_logs, { onConflict: "id" });
+    }
+    if (state.ai_recommendation_logs.length > 0) {
+      const latestLogs = state.ai_recommendation_logs.slice(-20);
+      await sb
+        .from("ai_recommendation_logs")
+        .upsert(latestLogs, { onConflict: "id" });
+    }
+    cachedCloudState = state;
+    lastCloudFetchAt = Date.now();
+  } catch {
+    // Graceful fallback to local persistence if cloud tables are not initialized yet
+  }
+}
 
 async function withStoreTransaction<T>(
   fn: (state: LocalDatabaseState) => Promise<T> | T,
@@ -554,16 +624,25 @@ async function withStoreTransaction<T>(
       fs.mkdirSync(dir, { recursive: true });
     }
     let state: LocalDatabaseState;
-    if (!fs.existsSync(filePath)) {
+    const cloud =
+      !customDataFilePath && hasSupabaseServiceCredentials()
+        ? await fetchCloudDatabaseSnapshot()
+        : null;
+    if (cloud && cloud.vehicles.length > 0) {
+      state = cloud;
+      syncRealVehiclePhotos(state);
+    } else if (!fs.existsSync(filePath)) {
       state = createInitialSeedState();
       fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
     } else {
       const raw = fs.readFileSync(filePath, "utf8");
       state = JSON.parse(raw) as LocalDatabaseState;
+      syncRealVehiclePhotos(state);
     }
 
     const result = await fn(state);
     fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
+    await syncStateToSupabase(state);
     return result;
   } finally {
     releaseLock();
@@ -571,6 +650,14 @@ async function withStoreTransaction<T>(
 }
 
 function readStoreSnapshot(): LocalDatabaseState {
+  if (
+    !customDataFilePath &&
+    hasSupabaseServiceCredentials() &&
+    cachedCloudState &&
+    Date.now() - lastCloudFetchAt < 5000
+  ) {
+    return cachedCloudState;
+  }
   const filePath = getStoreFilePath();
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
@@ -581,7 +668,57 @@ function readStoreSnapshot(): LocalDatabaseState {
     fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), "utf8");
     return seed;
   }
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as LocalDatabaseState;
+  const state = JSON.parse(fs.readFileSync(filePath, "utf8")) as LocalDatabaseState;
+  if (syncRealVehiclePhotos(state)) {
+    fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
+  }
+  return state;
+}
+
+async function readStoreSnapshotAsync(): Promise<LocalDatabaseState> {
+  if (!customDataFilePath && hasSupabaseServiceCredentials()) {
+    if (cachedCloudState && Date.now() - lastCloudFetchAt < 5000) {
+      return cachedCloudState;
+    }
+    const cloud = await fetchCloudDatabaseSnapshot();
+    if (cloud && cloud.vehicles.length > 0) {
+      syncRealVehiclePhotos(cloud);
+      cachedCloudState = cloud;
+      lastCloudFetchAt = Date.now();
+      return cloud;
+    }
+  }
+  return readStoreSnapshot();
+}
+
+export async function getPersistenceModeStatus(): Promise<{
+  mode: "supabase-cloud" | "local-fallback";
+  supabaseConfigured: boolean;
+  cloudVehiclesCount: number | null;
+}> {
+  const configured = hasSupabaseServiceCredentials();
+  if (!configured) {
+    return {
+      mode: "local-fallback",
+      supabaseConfigured: false,
+      cloudVehiclesCount: null,
+    };
+  }
+  const snap = await fetchCloudDatabaseSnapshot();
+  if (snap && snap.vehicles.length > 0) {
+    cachedCloudState = snap;
+    lastCloudFetchAt = Date.now();
+    return {
+      mode: "supabase-cloud",
+      supabaseConfigured: true,
+      cloudVehiclesCount: snap.vehicles.length,
+    };
+  }
+  return {
+    mode: "local-fallback",
+    supabaseConfigured: true,
+    cloudVehiclesCount: snap ? snap.vehicles.length : null,
+  };
 }
 
 export async function resetDatabaseToSeed(): Promise<void> {
@@ -727,7 +864,7 @@ export async function updateUserRoleOrStatusByAdmin(params: {
 // ============================================================================
 
 export async function listCategories(): Promise<VehicleCategoryRecord[]> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return [...state.vehicle_categories].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
@@ -834,7 +971,7 @@ export async function listVehicles(params?: {
   onlyAvailable?: boolean;
   sort?: "price_asc" | "price_desc" | "newest";
 }): Promise<VehicleWithCategory[]> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   let items = state.vehicles
     .filter((v) => v.deleted_at === null)
     .map((v) => enrichVehicle(v, state.vehicle_categories));
@@ -1185,12 +1322,12 @@ export async function createBooking(params: {
       id: crypto.randomUUID(),
       booking_id: booking.id,
       amount: pricing.totalPrice,
-      method: params.payment_method ?? "transfer",
+      method: params.payment_method ?? "qris",
       status: "unpaid",
       proof_url: null,
       paid_at: null,
       verified_by: null,
-      note: null,
+      note: "Menunggu pembayaran QRIS Midtrans Sandbox (rentgo-test).",
       created_at: nowIso,
       updated_at: nowIso,
     };
@@ -1319,8 +1456,17 @@ export async function updateBookingPayment(params: {
     }
 
     if (params.status !== undefined) {
-      if (params.actorRole !== "admin") {
-        throw new Error("Hanya admin yang dapat mengubah status verifikasi pembayaran.");
+      // Allow admin OR customer simulating QRIS Midtrans Sandbox payment on their own pending booking
+      const isSandboxQrisSelfPay =
+        params.actorRole === "customer" &&
+        booking.user_id === params.actorUserId &&
+        params.status === "paid" &&
+        (params.method === "qris" || payment.method === "qris");
+
+      if (params.actorRole !== "admin" && !isSandboxQrisSelfPay) {
+        throw new Error(
+          "Hanya admin yang dapat mengubah status verifikasi pembayaran.",
+        );
       }
       payment.status = params.status;
       if (params.status === "paid") {
@@ -1612,8 +1758,19 @@ export async function getAdminDashboardStats(todayWib: string = getTodayWib()) {
 }
 
 // ============================================================================
-// 7. AI Recommendation Rate-Limit & Audit Log Repository
+// 7. AI Recommendation Rate-Limit (10 req/minute + Daily) & Audit Log Repository
 // ============================================================================
+
+export async function countAiRequestsInLastMinute(
+  windowMs: number = 60_000,
+): Promise<number> {
+  const state = readStoreSnapshot();
+  const cutoffMs = Date.now() - windowMs;
+  return state.ai_recommendation_logs.filter((log) => {
+    const t = Date.parse(log.created_at);
+    return !Number.isNaN(t) && t >= cutoffMs;
+  }).length;
+}
 
 export async function countUserAiRequestsToday(
   userId: string,

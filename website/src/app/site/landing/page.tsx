@@ -85,55 +85,73 @@ export default async function LandingSurfacePage() {
       {/* 1. Sticky Navbar */}
       <header
         style={{ backgroundColor: "var(--surface-white)" }}
-        className="sticky top-0 z-30 border-b"
+        className="sticky top-0 z-40 border-b shadow-xs"
       >
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-          <a href="#" className="inline-flex items-center">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+          <a href="#" className="inline-flex shrink-0 items-center">
             <RentGoLogo surfaceLabel="Medan & Kualanamu" variant="light" />
           </a>
 
           <nav
             aria-label="Navigasi Halaman Utama"
-            className="hidden items-center gap-5 text-sm font-semibold lg:flex"
+            className="hidden items-center gap-4 whitespace-nowrap text-xs font-semibold lg:flex xl:gap-6 xl:text-sm"
           >
             <a
               href="#keunggulan"
               style={{ color: "var(--slate-600)" }}
-              className="min-h-[44px] inline-flex items-center hover:underline"
+              className="inline-flex min-h-[40px] items-center hover:underline"
             >
-              Keunggulan Operasional
+              Keunggulan
             </a>
             <a
               href="#armada"
               style={{ color: "var(--slate-600)" }}
-              className="min-h-[44px] inline-flex items-center hover:underline"
+              className="inline-flex min-h-[40px] items-center hover:underline"
             >
               Armada Unggulan
             </a>
             <a
               href="#alur"
               style={{ color: "var(--slate-600)" }}
-              className="min-h-[44px] inline-flex items-center hover:underline"
+              className="inline-flex min-h-[40px] items-center hover:underline"
             >
-              Cara Menyewa
+              Cara Sewa
             </a>
             <a
               href="#tarif"
               style={{ color: "var(--slate-600)" }}
-              className="min-h-[44px] inline-flex items-center hover:underline"
+              className="inline-flex min-h-[40px] items-center hover:underline"
             >
               Transparansi Tarif
             </a>
             <a
               href="#faq"
               style={{ color: "var(--slate-600)" }}
-              className="min-h-[44px] inline-flex items-center hover:underline"
+              className="inline-flex min-h-[40px] items-center hover:underline"
             >
               FAQ
             </a>
           </nav>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+            {user?.role === "admin" ? (
+              <a
+                href={adminUrl}
+                style={{
+                  backgroundColor: "var(--navy-900)",
+                  color: "var(--surface-white)",
+                  borderRadius: "var(--radius-control)",
+                }}
+                className="hidden min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold sm:inline-flex"
+              >
+                <ShieldCheck
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={{ color: "var(--accent-500)" }}
+                  aria-hidden="true"
+                />
+                <span>Panel Admin</span>
+              </a>
+            ) : null}
             <a
               href={bookUrl}
               data-testid="navbar-cta-book"
@@ -142,7 +160,7 @@ export default async function LandingSurfacePage() {
                 color: "var(--surface-white)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-bold sm:text-sm"
+              className="inline-flex min-h-[40px] items-center px-3.5 py-1.5 text-xs font-bold transition-opacity hover:opacity-95"
             >
               Buka Aplikasi Booking
             </a>
@@ -287,26 +305,79 @@ export default async function LandingSurfacePage() {
               </form>
             </div>
 
-            {/* LCP Hero Image following modern-web-guidance (fetchPriority="high", explicit width/height, no lazy loading) */}
+            {/* LCP Hero Showcase with Real Armada Photo following modern-web-guidance (fetchPriority="high", explicit width/height) */}
             <div className="lg:col-span-5">
               <div
                 style={{
                   backgroundColor: "var(--navy-800)",
-                  borderColor: "rgb(255 255 255 / 0.14)",
+                  borderColor: "rgb(255 255 255 / 0.16)",
                   borderRadius: "var(--radius-card)",
                   boxShadow: "var(--shadow-elevated)",
                 }}
-                className="overflow-hidden border p-4"
+                className="space-y-3 overflow-hidden border p-4"
               >
-                <img
-                  src="/vehicles/hero-fleet.svg"
-                  alt="Ilustrasi Armada Kendaraan RentGo Medan Siap Jalan"
-                  width={560}
-                  height={380}
-                  fetchPriority="high"
-                  decoding="async"
-                  className="h-auto w-full rounded"
-                />
+                <div
+                  style={{ backgroundColor: "var(--surface-white)" }}
+                  className="relative flex h-56 items-center justify-center rounded-lg p-3"
+                >
+                  <img
+                    src="/vehicles/Toyota-Avanza-1.5-G-CVT.png"
+                    alt="Unit Armada Toyota Avanza 1.5 G CVT RentGo Medan Siap Jalan"
+                    width={520}
+                    height={300}
+                    fetchPriority="high"
+                    decoding="async"
+                    className="max-h-48 w-auto object-contain"
+                  />
+                  <span
+                    style={{
+                      backgroundColor: "var(--secondary-600)",
+                      color: "var(--surface-white)",
+                      borderRadius: "var(--radius-badge)",
+                    }}
+                    className="absolute left-3 top-3 px-2.5 py-1 text-[10px] font-extrabold uppercase"
+                  >
+                    Armada Populer • BK 1750 AAD
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  <div
+                    style={{ backgroundColor: "rgb(255 255 255 / 0.08)" }}
+                    className="flex items-center gap-2.5 rounded-lg p-2.5"
+                  >
+                    <img
+                      src="/vehicles/Honda-Brio-Satya-RS.jfif"
+                      alt="Honda Brio Satya RS"
+                      width={64}
+                      height={44}
+                      className="h-10 w-14 rounded bg-white object-contain p-0.5"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-bold">Brio Satya RS</p>
+                      <p style={{ color: "var(--accent-500)" }} className="font-bold">
+                        Rp 320rb/hr
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    style={{ backgroundColor: "rgb(255 255 255 / 0.08)" }}
+                    className="flex items-center gap-2.5 rounded-lg p-2.5"
+                  >
+                    <img
+                      src="/vehicles/yamaha-nmax-155-connected.png"
+                      alt="Yamaha NMAX 155 Connected"
+                      width={64}
+                      height={44}
+                      className="h-10 w-14 rounded bg-white object-contain p-0.5"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-bold">NMAX 155 ABS</p>
+                      <p style={{ color: "var(--accent-500)" }} className="font-bold">
+                        Rp 140rb/hr
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -526,7 +597,7 @@ export default async function LandingSurfacePage() {
                           width={300}
                           height={165}
                           loading="lazy"
-                          className="max-h-36 w-auto object-contain"
+                          className="max-h-36 w-auto rounded object-contain"
                         />
                         <span
                           style={{
@@ -537,6 +608,24 @@ export default async function LandingSurfacePage() {
                           className="absolute left-3 top-3 px-2.5 py-1 text-[11px] font-semibold"
                         >
                           {v.category_name}
+                        </span>
+                        <span
+                          style={{
+                            backgroundColor:
+                              !v.image_url || v.image_url.endsWith(".svg")
+                                ? "var(--slate-200)"
+                                : "var(--secondary-100)",
+                            color:
+                              !v.image_url || v.image_url.endsWith(".svg")
+                                ? "var(--slate-600)"
+                                : "var(--secondary-700)",
+                            borderRadius: "var(--radius-badge)",
+                          }}
+                          className="absolute right-3 top-3 px-2 py-0.5 text-[10px] font-bold"
+                        >
+                          {!v.image_url || v.image_url.endsWith(".svg")
+                            ? "Placeholder"
+                            : "Foto Unit Asli"}
                         </span>
                       </div>
 
@@ -674,7 +763,7 @@ export default async function LandingSurfacePage() {
                 Pilih Tanggal & Unit Armada
               </h3>
               <p style={{ color: "var(--slate-600)" }} className="text-xs leading-relaxed">
-                Masukkan tanggal mulai dan tanggal selesai sewa (WIB) di <code>book.rentgo.my.id</code>. Gunakan filter spesifikasi atau fitur &ldquo;Bantu Saya Pilih&rdquo; berbasis AI untuk menemukan kendaraan yang tersedia.
+                Masukkan tanggal mulai dan tanggal selesai sewa (WIB) di <code>rentgo.my.id/book</code>. Gunakan filter spesifikasi atau fitur &ldquo;Bantu Saya Pilih&rdquo; berbasis AI untuk menemukan kendaraan yang tersedia.
               </p>
             </div>
 
@@ -1058,7 +1147,7 @@ export default async function LandingSurfacePage() {
           <div className="space-y-3">
             <RentGoLogo surfaceLabel="Medan" variant="light" />
             <p className="text-xs leading-relaxed">
-              Sistem Manajemen Penyewaan Kendaraan Berbasis Web dengan Arsitektur Multi-Subdomain dan Metodologi SDLC Incremental.
+              Sistem Manajemen Penyewaan Kendaraan Berbasis Web dengan Arsitektur Single-Domain Multi-Surface (1x Login Terpadu) dan Metodologi SDLC Incremental.
             </p>
           </div>
 
@@ -1067,22 +1156,22 @@ export default async function LandingSurfacePage() {
               style={{ color: "var(--navy-900)" }}
               className="font-bold uppercase"
             >
-              Ekosistem Subdomain
+              Ekosistem Aplikasi Terpadu
             </p>
             <ul className="space-y-1.5">
               <li>
-                <a href="#" className="hover:underline">
+                <a href="/" className="hover:underline">
                   rentgo.my.id (Landing & Profil Layanan)
                 </a>
               </li>
               <li>
                 <a href={bookUrl} className="hover:underline">
-                  book.rentgo.my.id (Katalog, AI, & Checkout)
+                  rentgo.my.id/book (Katalog, AI, & Checkout)
                 </a>
               </li>
               <li>
                 <a href={adminUrl} className="hover:underline">
-                  admin.rentgo.my.id (Dasbor Operasional Admin)
+                  rentgo.my.id/admin (Dasbor Operasional Admin)
                 </a>
               </li>
             </ul>

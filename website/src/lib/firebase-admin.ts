@@ -15,7 +15,10 @@ let cachedAdminApp: App | null = null;
 
 function getFirebaseAdminAuth(): Auth | null {
   const env = getEnv();
-  if (!env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 && !env.FIREBASE_AUTH_EMULATOR_HOST) {
+  if (
+    !env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 &&
+    !env.FIREBASE_AUTH_EMULATOR_HOST
+  ) {
     return null;
   }
   if (!cachedAdminApp) {
@@ -33,7 +36,7 @@ function getFirebaseAdminAuth(): Auth | null {
       });
     } else {
       cachedAdminApp = initializeApp({
-        projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "demo-rentgo",
+        projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "rentgo-medan",
       });
     }
   }
@@ -44,12 +47,16 @@ function getHmacSecret(): string {
   return getEnv().CRON_SECRET || "dev-cron-secret-rentgo-2026";
 }
 
-export function createSignedDevSessionCookie(identity: VerifiedIdentity): string {
+export function createSignedDevSessionCookie(
+  identity: VerifiedIdentity,
+): string {
   const payload = {
     ...identity,
     exp: Date.now() + 5 * 24 * 60 * 60 * 1000,
   };
-  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString(
+    "base64url",
+  );
   const sig = crypto
     .createHmac("sha256", getHmacSecret())
     .update(encoded)
@@ -88,6 +95,44 @@ export function verifySignedDevSessionCookie(
   }
 }
 
+async function verifyIdTokenViaFirebaseRest(
+  idToken: string,
+  apiKey: string,
+): Promise<VerifiedIdentity | null> {
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idToken }),
+        signal: AbortSignal.timeout(3500),
+      },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      users?: Array<{
+        localId?: string;
+        email?: string;
+        displayName?: string;
+        photoUrl?: string;
+      }>;
+    };
+    const u = data.users?.[0];
+    if (!u || !u.email || !u.localId) return null;
+    const email = u.email.toLowerCase();
+    return {
+      firebase_uid: u.localId,
+      email,
+      full_name:
+        u.displayName?.trim() || email.split("@")[0] || "Pengguna RentGo",
+      avatar_url: u.photoUrl ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function verifyIncomingIdTokenAndCreateSession(
   idToken: string,
 ): Promise<{
@@ -96,9 +141,16 @@ export async function verifyIncomingIdTokenAndCreateSession(
 }> {
   const env = getEnv();
 
-  // Support local emulator / non-production test token ONLY when NODE_ENV !== 'production'
-  if (env.NODE_ENV !== "production" && idToken.startsWith("emulator-google:")) {
-    const rawJson = idToken.slice("emulator-google:".length);
+  // 1. Support local emulator / demo switcher & email/password fallback token in non-production
+  if (
+    env.NODE_ENV !== "production" &&
+    (idToken.startsWith("emulator-google:") ||
+      idToken.startsWith("firebase-email:"))
+  ) {
+    const prefix = idToken.startsWith("emulator-google:")
+      ? "emulator-google:"
+      : "firebase-email:";
+    const rawJson = idToken.slice(prefix.length);
     const parsed = JSON.parse(rawJson) as {
       uid?: string;
       email: string;
@@ -107,9 +159,11 @@ export async function verifyIncomingIdTokenAndCreateSession(
     };
     const email = parsed.email.trim().toLowerCase();
     const identity: VerifiedIdentity = {
-      firebase_uid: parsed.uid || `emu-${email.replace(/[^a-z0-9]/g, "-")}`,
+      firebase_uid:
+        parsed.uid || `fb-${email.replace(/[^a-z0-9]/g, "-")}`,
       email,
-      full_name: parsed.name?.trim() || email.split("@")[0] || "Pengguna RentGo",
+      full_name:
+        parsed.name?.trim() || email.split("@")[0] || "Pengguna RentGo",
       avatar_url: parsed.picture ?? null,
     };
     return {
@@ -118,34 +172,47 @@ export async function verifyIncomingIdTokenAndCreateSession(
     };
   }
 
+  // 2. If Firebase Admin SDK service account is configured, use full Admin SDK verification
   const adminAuth = getFirebaseAdminAuth();
-  if (!adminAuth) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 belum dikonfigurasi di server.",
+  if (adminAuth) {
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    if (!decoded.email) {
+      throw new Error("Akun Firebase tidak memiliki alamat email terverifikasi.");
+    }
+    const identity: VerifiedIdentity = {
+      firebase_uid: decoded.uid,
+      email: decoded.email.toLowerCase(),
+      full_name:
+        decoded.name || decoded.email.split("@")[0] || "Pengguna RentGo",
+      avatar_url: decoded.picture ?? null,
+    };
+    const expiresIn = 5 * 24 * 60 * 60 * 1000;
+    const sessionCookieValue = await adminAuth.createSessionCookie(idToken, {
+      expiresIn,
+    });
+    return {
+      identity,
+      sessionCookieValue,
+    };
+  }
+
+  // 3. Verify live Firebase ID token via Firebase Identity Toolkit REST API (project: rentgo-medan)
+  if (env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+    const restIdentity = await verifyIdTokenViaFirebaseRest(
+      idToken,
+      env.NEXT_PUBLIC_FIREBASE_API_KEY,
     );
+    if (restIdentity) {
+      return {
+        identity: restIdentity,
+        sessionCookieValue: createSignedDevSessionCookie(restIdentity),
+      };
+    }
   }
 
-  const decoded = await adminAuth.verifyIdToken(idToken);
-  if (!decoded.email) {
-    throw new Error("Akun Google tidak memiliki alamat email terverifikasi.");
-  }
-
-  const identity: VerifiedIdentity = {
-    firebase_uid: decoded.uid,
-    email: decoded.email.toLowerCase(),
-    full_name: decoded.name || decoded.email.split("@")[0] || "Pengguna RentGo",
-    avatar_url: decoded.picture ?? null,
-  };
-
-  const expiresIn = 5 * 24 * 60 * 60 * 1000; // 5 days
-  const sessionCookieValue = await adminAuth.createSessionCookie(idToken, {
-    expiresIn,
-  });
-
-  return {
-    identity,
-    sessionCookieValue,
-  };
+  throw new Error(
+    "Token autentikasi Firebase tidak valid atau telah kedaluwarsa.",
+  );
 }
 
 export async function verifySessionCookieServer(
@@ -153,8 +220,7 @@ export async function verifySessionCookieServer(
 ): Promise<VerifiedIdentity | null> {
   if (!sessionCookieValue) return null;
 
-  const env = getEnv();
-  if (env.NODE_ENV !== "production" && sessionCookieValue.startsWith("rgdev.")) {
+  if (sessionCookieValue.startsWith("rgdev.")) {
     return verifySignedDevSessionCookie(sessionCookieValue);
   }
 
@@ -164,12 +230,16 @@ export async function verifySessionCookieServer(
   }
 
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookieValue, true);
+    const decoded = await adminAuth.verifySessionCookie(
+      sessionCookieValue,
+      true,
+    );
     if (!decoded.email) return null;
     return {
       firebase_uid: decoded.uid,
       email: decoded.email.toLowerCase(),
-      full_name: decoded.name || decoded.email.split("@")[0] || "Pengguna RentGo",
+      full_name:
+        decoded.name || decoded.email.split("@")[0] || "Pengguna RentGo",
       avatar_url: decoded.picture ?? null,
     };
   } catch {

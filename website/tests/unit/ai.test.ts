@@ -48,6 +48,27 @@ const mockCandidates: VehicleWithCategory[] = [
     created_at: "2026-11-15T00:00:00Z",
     updated_at: "2026-11-15T00:00:00Z",
   },
+  {
+    id: "33333333-3333-4333-8333-333333333311",
+    category_id: "11111111-1111-4111-8111-111111111105",
+    category_name: "Motor",
+    category_slug: "motor",
+    plate_number: "BK 4112 AAM",
+    brand: "Yamaha",
+    model: "NMAX 155 Connected",
+    year: 2024,
+    color: "Biru Navy",
+    transmission: "automatic",
+    fuel: "bensin",
+    seats: 2,
+    daily_price: 140000,
+    status: "active",
+    description: "Skutik 155cc posisi duduk rileks",
+    image_url: "/vehicles/yamaha-nmax-155-connected.png",
+    deleted_at: null,
+    created_at: "2026-11-15T00:00:00Z",
+    updated_at: "2026-11-15T00:00:00Z",
+  },
 ];
 
 describe("AI Recommendation Validation & Heuristic Fallback", () => {
@@ -75,7 +96,7 @@ describe("AI Recommendation Validation & Heuristic Fallback", () => {
     expect(cleaned[0]?.rank).toBe(1);
   });
 
-  it("produces deterministic heuristic fallback matching passenger count and budget", () => {
+  it("produces deterministic heuristic fallback matching passenger count, vehicle type, and budget", () => {
     const fallback = buildHeuristicRecommendations({
       candidates: mockCandidates,
       passengers: 6,
@@ -90,6 +111,20 @@ describe("AI Recommendation Validation & Heuristic Fallback", () => {
     // 6 passengers requires the 7-seat Rush SUV, not the 5-seat Brio
     expect(fallback.recommendations[0]?.vehicle_id).toBe(
       "33333333-3333-4333-8333-333333333307",
+    );
+
+    // Motorcycle natural language query with default 4 passengers must extract motor + 200rb budget
+    const motorRec = buildHeuristicRecommendations({
+      candidates: mockCandidates,
+      passengers: 4,
+      maxDailyBudget: null,
+      queryText: "motor yang cocok untuk touring bareng pacar, budget 200rb maksimal",
+      startDate: "2026-11-20",
+      endDate: "2026-11-21",
+    });
+    expect(motorRec.recommendations).toHaveLength(1);
+    expect(motorRec.recommendations[0]?.vehicle_id).toBe(
+      "33333333-3333-4333-8333-333333333311",
     );
   });
 });

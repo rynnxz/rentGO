@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
   MessageCircle,
+  QrCode,
+  ShieldCheck,
   Upload,
   XCircle,
 } from "lucide-react";
@@ -21,13 +23,59 @@ import {
 } from "@/components/ui/badge";
 import type { BookingDetailView } from "@/lib/types";
 
+/**
+ * Generates a deterministic 21x21 QR matrix for the Midtrans Sandbox QRIS card
+ * based on booking_code and total_price.
+ */
+function buildQrisMatrix(seedText: string): boolean[][] {
+  const size = 21;
+  const grid: boolean[][] = Array.from({ length: size }, () =>
+    Array(size).fill(false),
+  );
+
+  function drawFinder(r0: number, c0: number) {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
+        const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        grid[r0 + r]![c0 + c] = isBorder || isInner;
+      }
+    }
+  }
+
+  drawFinder(0, 0);
+  drawFinder(0, size - 7);
+  drawFinder(size - 7, 0);
+
+  let hash = 2166136261;
+  for (let i = 0; i < seedText.length; i++) {
+    hash ^= seedText.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const inTopLeft = r < 8 && c < 8;
+      const inTopRight = r < 8 && c >= size - 8;
+      const inBottomLeft = r >= size - 8 && c < 8;
+      const inCenterLogo = r >= 8 && r <= 12 && c >= 8 && c <= 12;
+      if (inTopLeft || inTopRight || inBottomLeft || inCenterLogo) continue;
+
+      hash ^= (r * 31 + c * 17) & 0xff;
+      hash = Math.imul(hash, 16777619);
+      grid[r]![c] = (Math.abs(hash) % 10) < 5;
+    }
+  }
+
+  return grid;
+}
+
 export function BookingDetailClient({
   initialBooking,
-  bankInfo,
   whatsappNumber,
 }: {
   initialBooking: BookingDetailView;
-  bankInfo: string;
+  bankInfo?: string;
   whatsappNumber: string;
 }) {
   const router = useRouter();
@@ -36,6 +84,16 @@ export function BookingDetailClient({
   const [cancelling, setCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const qrMatrix = useMemo(
+    () =>
+      buildQrisMatrix(
+        `rentgo-test:${booking.booking_code}:${booking.total_price}`,
+      ),
+    [booking.booking_code, booking.total_price],
+  );
+
+  const isPaid = booking.payment?.status === "paid";
 
   const whatsappUrl = buildWhatsAppBookingUrl({
     whatsappNumber,
@@ -47,24 +105,39 @@ export function BookingDetailClient({
     customerName: booking.user_name,
   });
 
-  async function saveProofUrl(proofUrl: string) {
-    const res = await fetch(`/api/payments/${booking.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        proof_url: proofUrl,
-        note: "Bukti pembayaran diunggah oleh pelanggan",
-      }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(json.error || "Gagal menyimpan bukti pembayaran.");
+  async function handleSimulateQrisPaid() {
+    setUploading(true);
+    setErrorMsg(null);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/payments/${booking.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          status: "paid",
+          method: "qris",
+          proof_url: "/vehicles/receipt-placeholder.svg",
+          note: `Lunas via Simulasi QRIS Midtrans Sandbox (Merchant: rentgo-test, Ref: MID-QRIS-${booking.booking_code})`,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Gagal memproses pembayaran QRIS Sandbox.");
+      }
+      setBooking(json.data);
+      setFeedback(
+        "Pembayaran QRIS Midtrans Sandbox (rentgo-test) berhasil dikonfirmasi! Status pembayaran Anda kini LUNAS.",
+      );
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Gagal memproses simulasi pembayaran QRIS.",
+      );
+    } finally {
+      setUploading(false);
     }
-    setBooking(json.data);
-    setFeedback(
-      "Bukti pembayaran berhasil diunggah. Petugas Admin RentGo akan segera memverifikasi pesanan Anda.",
-    );
-    router.refresh();
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -85,25 +158,27 @@ export function BookingDetailClient({
       if (!upRes.ok) {
         throw new Error(upJson.error || "Gagal mengunggah file bukti bayar.");
       }
-      await saveProofUrl(upJson.url);
+      const res = await fetch(`/api/payments/${booking.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          method: "qris",
+          proof_url: upJson.url,
+          note: "Bukti tangkapan layar QRIS diunggah oleh pelanggan",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Gagal menyimpan bukti pembayaran.");
+      }
+      setBooking(json.data);
+      setFeedback(
+        "Bukti tangkapan layar QRIS berhasil diunggah. Anda juga dapat menekan tombol 'Sudah Bayar' untuk penyelesaian instan di mode Sandbox.",
+      );
+      router.refresh();
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal mengunggah bukti bayar.",
-      );
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function handleSimulateSampleReceipt() {
-    setUploading(true);
-    setErrorMsg(null);
-    setFeedback(null);
-    try {
-      await saveProofUrl("/vehicles/receipt-placeholder.svg");
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error ? err.message : "Gagal menyimpan bukti bayar.",
       );
     } finally {
       setUploading(false);
@@ -140,7 +215,7 @@ export function BookingDetailClient({
     <div className="space-y-6" data-testid="booking-detail-view">
       <div>
         <Link
-          href="/bookings"
+          href="/book/bookings"
           style={{ color: "var(--primary-600)" }}
           className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-semibold hover:underline"
         >
@@ -281,7 +356,7 @@ export function BookingDetailClient({
               </p>
             </div>
             <div>
-              <p style={{ color: "var(--slate-600)" }}>Total Tagihan</p>
+              <p style={{ color: "var(--slate-600)" }}>Total Tagihan QRIS</p>
               <p
                 style={{ color: "var(--primary-600)" }}
                 className="text-sm font-extrabold tabular-nums"
@@ -332,113 +407,226 @@ export function BookingDetailClient({
           ) : null}
         </section>
 
-        {/* Right: Payment Proof Upload & WhatsApp Confirmation */}
+        {/* Right: Midtrans Sandbox QRIS Payment Card + "Sudah Bayar" Button */}
         <section
           aria-labelledby="payment-section-heading"
           style={{
             backgroundColor: "var(--surface-white)",
             borderRadius: "var(--radius-card)",
-            boxShadow: "var(--shadow-card)",
+            boxShadow: "var(--shadow-elevated)",
           }}
           className="space-y-5 border p-6 lg:col-span-5"
         >
-          <div>
-            <h2
-              id="payment-section-heading"
-              style={{ color: "var(--navy-900)" }}
-              className="text-lg font-bold"
-            >
-              Instruksi Pembayaran & Konfirmasi
-            </h2>
-            <p style={{ color: "var(--slate-600)" }} className="text-xs">
-              Unggah bukti transfer/QRIS Anda atau kirim konfirmasi langsung ke WhatsApp Admin RentGo Medan.
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <span
+                style={{
+                  backgroundColor: "var(--secondary-50)",
+                  color: "var(--secondary-700)",
+                  borderColor: "var(--secondary-100)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="inline-block border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+              >
+                Midtrans Sandbox • Merchant: rentgo-test
+              </span>
+              <h2
+                id="payment-section-heading"
+                style={{ color: "var(--navy-900)" }}
+                className="mt-1 text-lg font-extrabold"
+              >
+                Pembayaran QRIS Instan
+              </h2>
+              <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                Pindai kode QRIS di bawah atau klik tombol <strong>&ldquo;Sudah Bayar&rdquo;</strong> untuk simulasi pembayaran di mode Sandbox.
+              </p>
+            </div>
+            <QrCode
+              className="h-6 w-6 shrink-0"
+              style={{ color: "var(--secondary-600)" }}
+              aria-hidden="true"
+            />
           </div>
 
+          {/* Interactive QRIS Code Box */}
           <div
+            data-testid="qris-sandbox-card"
             style={{
               backgroundColor: "var(--slate-50)",
-              borderRadius: "var(--radius-control)",
+              borderColor: isPaid
+                ? "var(--success)"
+                : "var(--secondary-600)",
+              borderRadius: "var(--radius-card)",
             }}
-            className="space-y-1.5 border p-4 text-xs"
+            className="space-y-3 border-2 p-4 text-center"
           >
-            <p style={{ color: "var(--slate-600)" }} className="font-semibold">
-              Tujuan Pembayaran Resmi:
-            </p>
-            <p
-              style={{ color: "var(--navy-900)" }}
-              className="font-mono text-sm font-bold"
-            >
-              {bankInfo}
-            </p>
-            <p style={{ color: "var(--slate-600)" }} className="pt-1">
-              Nominal Transfer:{" "}
-              <strong style={{ color: "var(--primary-600)" }}>
-                {formatRupiah(booking.total_price)}
-              </strong>
-            </p>
-          </div>
-
-          {booking.payment?.proof_url ? (
-            <div className="space-y-2">
-              <p
-                style={{ color: "var(--success-text)" }}
-                className="flex items-center gap-1.5 text-xs font-bold"
+            <div className="flex items-center justify-between border-b pb-2 text-left text-xs">
+              <div>
+                <p
+                  style={{ color: "var(--navy-900)" }}
+                  className="font-extrabold uppercase"
+                >
+                  QRIS • PT RentGo Transportasi Medan
+                </p>
+                <p
+                  style={{ color: "var(--slate-600)" }}
+                  className="font-mono text-[10px]"
+                >
+                  NMID: ID1026000998801 • Ref: MID-QRIS-{booking.booking_code}
+                </p>
+              </div>
+              <span
+                style={{
+                  backgroundColor: isPaid
+                    ? "var(--success-bg)"
+                    : "var(--accent-100)",
+                  color: isPaid
+                    ? "var(--success-text)"
+                    : "var(--warning-text)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="px-2 py-0.5 text-[10px] font-extrabold uppercase"
               >
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                <span>Bukti Pembayaran Tercatat:</span>
-              </p>
-              <img
-                src={booking.payment.proof_url}
-                alt="Bukti pembayaran"
-                width={280}
-                height={170}
-                className="max-h-44 rounded border object-contain"
-              />
+                {isPaid ? "LUNAS (SETTLED)" : "SANDBOX AKTIF"}
+              </span>
             </div>
-          ) : null}
+
+            {/* SVG QRIS Matrix */}
+            <div
+              style={{ backgroundColor: "var(--surface-white)" }}
+              className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-xl border p-3 shadow-xs"
+            >
+              <svg
+                viewBox="0 0 21 21"
+                width="196"
+                height="196"
+                aria-label={`Kode QRIS Midtrans Sandbox untuk ${booking.booking_code}`}
+                className="h-full w-full"
+                shapeRendering="crispEdges"
+              >
+                <rect width="21" height="21" fill="var(--surface-white)" />
+                {qrMatrix.map((row, rIdx) =>
+                  row.map((cell, cIdx) =>
+                    cell ? (
+                      <rect
+                        key={`${rIdx}-${cIdx}`}
+                        x={cIdx}
+                        y={rIdx}
+                        width={1}
+                        height={1}
+                        fill="var(--navy-900)"
+                      />
+                    ) : null,
+                  ),
+                )}
+                {/* Center QRIS Brand Pill */}
+                <rect
+                  x="7.5"
+                  y="8.5"
+                  width="6"
+                  height="4"
+                  rx="0.8"
+                  fill="var(--primary-600)"
+                />
+                <text
+                  x="10.5"
+                  y="11.1"
+                  textAnchor="middle"
+                  fill="var(--surface-white)"
+                  fontSize="2.1"
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                >
+                  QRIS
+                </text>
+              </svg>
+
+              {isPaid ? (
+                <div
+                  style={{
+                    backgroundColor: "rgb(20 83 45 / 0.88)",
+                    color: "var(--surface-white)",
+                  }}
+                  className="absolute inset-0 flex flex-col items-center justify-center rounded-xl p-4 text-center"
+                >
+                  <CheckCircle2
+                    className="h-10 w-10"
+                    style={{ color: "var(--accent-500)" }}
+                    aria-hidden="true"
+                  />
+                  <p className="mt-2 text-sm font-extrabold uppercase">
+                    QRIS Terbayar Lunas
+                  </p>
+                  <p className="mt-0.5 font-mono text-[11px] opacity-90">
+                    Midtrans Sandbox Settlement
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-0.5 pt-1">
+              <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                Total Nominal QRIS:
+              </p>
+              <p
+                style={{ color: "var(--primary-600)" }}
+                className="text-xl font-extrabold tabular-nums"
+              >
+                {formatRupiah(booking.total_price)}
+              </p>
+            </div>
+          </div>
 
           {booking.status !== "cancelled" &&
           booking.status !== "rejected" &&
           booking.status !== "expired" ? (
-            <div className="space-y-3 border-t pt-4">
-              <label
+            <div className="space-y-3">
+              {/* Primary Sandbox "Sudah Bayar" Action Button */}
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={handleSimulateQrisPaid}
+                data-testid="simulate-upload-proof-button"
                 style={{
-                  backgroundColor: "var(--primary-50)",
-                  color: "var(--primary-700)",
-                  borderColor: "var(--primary-600)",
+                  backgroundColor: isPaid
+                    ? "var(--secondary-700)"
+                    : "var(--primary-600)",
+                  color: "var(--surface-white)",
                   borderRadius: "var(--radius-control)",
                 }}
-                className="flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border px-4 py-2.5 text-xs font-bold"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 px-4 py-3 text-sm font-extrabold shadow-sm transition-opacity hover:opacity-95 disabled:opacity-50"
               >
-                <Upload className="h-4 w-4" aria-hidden="true" />
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 <span>
                   {uploading
-                    ? "Mengunggah Bukti..."
-                    : "Pilih File Bukti Transfer (JPG/PNG/WebP)"}
+                    ? "Memverifikasi Midtrans Sandbox..."
+                    : isPaid
+                      ? "Sudah Bayar (Terkonfirmasi Lunas di Sandbox)"
+                      : "Sudah Bayar (Simulasi QRIS Midtrans Sandbox)"}
+                </span>
+              </button>
+
+              {/* Optional manual screenshot upload */}
+              <label
+                style={{
+                  backgroundColor: "var(--slate-50)",
+                  color: "var(--slate-600)",
+                  borderColor: "var(--slate-200)",
+                  borderRadius: "var(--radius-control)",
+                }}
+                className="flex min-h-[42px] w-full cursor-pointer items-center justify-center gap-2 border px-3 py-2 text-xs font-semibold hover:opacity-90"
+              >
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>
+                  Opsional: Unggah Screenshot Bukti QRIS (Cloud Storage)
                 </span>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/jfif"
                   onChange={handleFileUpload}
                   className="sr-only"
                 />
               </label>
-
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={handleSimulateSampleReceipt}
-                data-testid="simulate-upload-proof-button"
-                style={{
-                  backgroundColor: "var(--slate-100)",
-                  color: "var(--slate-900)",
-                  borderRadius: "var(--radius-control)",
-                }}
-                className="flex min-h-[44px] w-full items-center justify-center px-4 py-2 text-xs font-semibold"
-              >
-                Gunakan Bukti Struk Contoh (Demo Cepat)
-              </button>
             </div>
           ) : null}
 
@@ -453,7 +641,7 @@ export function BookingDetailClient({
                 color: "var(--surface-white)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 px-4 py-3 text-sm font-bold"
+              className="flex min-h-[46px] w-full items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold sm:text-sm"
             >
               <MessageCircle className="h-4 w-4" aria-hidden="true" />
               <span>Konfirmasi via WhatsApp Admin Medan</span>

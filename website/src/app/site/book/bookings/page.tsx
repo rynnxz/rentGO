@@ -59,7 +59,7 @@ export default async function CustomerBookingsListPage() {
           </p>
         </div>
         <Link
-          href="/"
+          href="/book"
           style={{
             backgroundColor: "var(--primary-600)",
             color: "var(--surface-white)",
@@ -91,7 +91,7 @@ export default async function CustomerBookingsListPage() {
             Pilih unit kendaraan di katalog armada untuk membuat pesanan sewa pertama Anda.
           </p>
           <Link
-            href="/"
+            href="/book"
             style={{
               backgroundColor: "var(--primary-600)",
               color: "var(--surface-white)",
@@ -173,7 +173,7 @@ export default async function CustomerBookingsListPage() {
                 </div>
 
                 <Link
-                  href={`/bookings/${b.id}`}
+                  href={`/book/bookings/${b.id}`}
                   data-testid={`open-booking-detail-${b.booking_code}`}
                   style={{
                     backgroundColor: "var(--primary-600)",

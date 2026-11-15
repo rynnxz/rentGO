@@ -34,7 +34,7 @@ export default async function BookSurfaceLayout({
         className="border-t px-4 py-5 text-center text-xs"
       >
         <p>
-          RentGo Medan (<code>book.rentgo.my.id</code>) - Sistem Penyewaan Kendaraan Real-Time Berbasis SDLC Incremental.
+          RentGo Medan (<code>rentgo.my.id/book</code>) - Sistem Penyewaan Kendaraan Real-Time Berbasis SDLC Incremental.
         </p>
       </footer>
     </div>

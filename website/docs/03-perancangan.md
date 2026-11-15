@@ -24,10 +24,11 @@ flowchart TB
         API["/api/* (Route Handlers: Auth, Vehicles, Bookings, Payments, Maintenance, AI, Cron)"]
     end
 
-    subgraph External["Layanan Cloud Gratis (Free Tier)"]
-        FB["Firebase Auth (Google Sign-In & Session Cookie .rentgo.my.id)"]
-        SB["Supabase Postgres + Storage (RLS Deny-All, Service Role Server-Only)"]
-        GM["Google Gemini API (@google/genai, gemini-3.5-flash-lite)"]
+    subgraph External["Layanan Cloud & Integrasi Eksternal"]
+        FB["Firebase Auth (rentgo-medan: Google & Email/Pass + Cookie .rentgo.my.id)"]
+        SB["Supabase Postgres + Storage (honhszsloegvpbmczkqf)"]
+        MT["Midtrans Sandbox QRIS (rentgo-test + Simulasi Sudah Bayar)"]
+        GM["Google Gemini API (gemini-flash-latest, Rate Limit 10/menit)"]
         VC["Vercel Cron (GET /api/cron/housekeeping Harian)"]
     end
 
@@ -39,8 +40,18 @@ flowchart TB
     VC -->|Bearer CRON_SECRET| API
     API --> FB
     API --> SB
+    API --> MT
     API --> GM
 ```
+
+### Penghubung Antar-Arsitektur (Inter-Service Connectors)
+| Komponen Asal -> Tujuan | Protokol & Mekanisme Penghubung | Peran & Keamanan Transaksi |
+| :--- | :--- | :--- |
+| **Browser -> Next.js Middleware** | HTTP Request Header `Host` + Cookie `__session` (`httpOnly`, `SameSite=Lax`) | Memetakan `rentgo.my.id`, `book.*`, `admin.*` ke folder `/site/*` dan memblokir akses langsung ke `/site/*` (`HTTP 404`). |
+| **Client/Server -> Firebase Auth** | Firebase Web SDK (`signInWithPopup` / `signInWithEmailAndPassword`) + Identity Toolkit REST API (`accounts:lookup`) | Mengautentikasi pengguna di proyek `rentgo-medan`, memverifikasi `idToken` di server `/api/auth/session`, lalu menyinkronkan profil ke tabel `users`. |
+| **API Server -> Supabase Cloud** | `@supabase/supabase-js` (`service_role`) + PostgreSQL RPC (`create_booking_safe`) + Storage REST API | Menjalankan query relasional 7 tabel, mengunci baris `SELECT ... FOR UPDATE`, dan mengunggah foto armada ke bucket publik `honhszsloegvpbmczkqf`. |
+| **Checkout -> Midtrans Sandbox** | Payload QRIS Dinamis (`rentgo-test`, via variabel lingkungan server) + Endpoint `PATCH /api/bookings/[id]/payment` | Menerbitkan kode QRIS Sandbox per `booking_code` dan memproses simulasi pelunasan instan melalui tombol **"Sudah Bayar"**. |
+| **Katalog -> Google Gemini AI** | HTTPS `POST` ke `v1beta/models/gemini-flash-latest:generateContent` (`X-goog-api-key`) | Mengirim kandidat unit tersedia, dibatasi **Sliding Window Rate Limiter 10 respons/menit** (`ai_recommendation_logs`) + fallback heuristik 2,5 detik. |
 
 ### Aturan Resolusi Host & Keamanan Rute
 1. Akses langsung dari browser ke URL `/site/landing`, `/site/book`, atau `/site/admin` langsung dikembalikan **HTTP 404** oleh middleware.

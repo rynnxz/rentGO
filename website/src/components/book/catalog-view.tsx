@@ -359,15 +359,28 @@ export function CatalogView({
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h2
-                id="ai-assistant-heading"
-                style={{ color: "var(--navy-900)" }}
-                className="text-lg font-bold"
-              >
-                Bantu Saya Pilih Kendaraan (Asisten AI RentGo)
-              </h2>
-              <p style={{ color: "var(--slate-600)" }} className="text-xs">
-                Ceritakan rute perjalanan Anda di Medan/Sumatera Utara, jumlah penumpang, dan anggaran harian. AI hanya merekomendasikan armada yang nyata dan tersedia pada tanggal pilihan Anda.
+              <div className="flex flex-wrap items-center gap-2">
+                <h2
+                  id="ai-assistant-heading"
+                  style={{ color: "var(--navy-900)" }}
+                  className="text-lg font-bold"
+                >
+                  Bantu Saya Pilih Kendaraan (Asisten AI Gemini)
+                </h2>
+                <span
+                  style={{
+                    backgroundColor: "var(--secondary-50)",
+                    color: "var(--secondary-700)",
+                    borderColor: "var(--secondary-100)",
+                    borderRadius: "var(--radius-badge)",
+                  }}
+                  className="border px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                >
+                  Rate Limit: Maks. 10 Respons / Menit
+                </span>
+              </div>
+              <p style={{ color: "var(--slate-600)" }} className="mt-0.5 text-xs">
+                Ceritakan rute perjalanan Anda di Medan/Sumatera Utara, jumlah penumpang, dan anggaran harian. AI hanya merekomendasikan armada nyata yang tersedia pada tanggal pilihan Anda.
               </p>
             </div>
           </div>
@@ -436,6 +449,22 @@ export function CatalogView({
                 className="min-h-[36px] px-3 py-1 text-xs font-semibold"
               >
                 Rombongan Dinas 12+ Orang (Hiace)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setAiQuery(
+                    "Motor yang cocok untuk touring bareng pacar, budget 200rb maksimal",
+                  )
+                }
+                style={{
+                  backgroundColor: "var(--primary-50)",
+                  color: "var(--primary-700)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="min-h-[36px] px-3 py-1 text-xs font-semibold"
+              >
+                Touring Motor Berdua (Budget 200rb)
               </button>
             </div>
 
@@ -554,12 +583,24 @@ export function CatalogView({
                               Kecocokan {rec.fit_score}%
                             </span>
                           </div>
-                          <h3
-                            style={{ color: "var(--navy-900)" }}
-                            className="text-base font-bold"
-                          >
-                            {v.brand} {v.model}
-                          </h3>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3
+                              style={{ color: "var(--navy-900)" }}
+                              className="text-base font-bold"
+                            >
+                              {v.brand} {v.model}
+                            </h3>
+                            <span
+                              style={{
+                                backgroundColor: "var(--slate-100)",
+                                color: "var(--slate-900)",
+                                borderRadius: "var(--radius-badge)",
+                              }}
+                              className="shrink-0 px-2 py-0.5 text-[10px] font-bold"
+                            >
+                              {v.category_name} • {v.seats} Kursi
+                            </span>
+                          </div>
                           <p
                             style={{ color: "var(--slate-600)" }}
                             className="text-xs"
@@ -584,7 +625,7 @@ export function CatalogView({
                             </p>
                           </div>
                           <Link
-                            href={`/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
+                            href={`/book/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
                             style={{
                               backgroundColor: "var(--primary-600)",
                               color: "var(--surface-white)",
@@ -686,7 +727,7 @@ export function CatalogView({
                         alt={`${v.brand} ${v.model}`}
                         width={320}
                         height={176}
-                        className="max-h-36 w-auto object-contain"
+                        className="max-h-36 w-auto rounded object-contain"
                       />
                       <span
                         style={{
@@ -708,6 +749,18 @@ export function CatalogView({
                       >
                         Tersedia
                       </span>
+                      {!v.image_url || v.image_url.endsWith(".svg") ? (
+                        <span
+                          style={{
+                            backgroundColor: "var(--slate-200)",
+                            color: "var(--slate-600)",
+                            borderRadius: "var(--radius-badge)",
+                          }}
+                          className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-semibold"
+                        >
+                          Ilustrasi Placeholder
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="space-y-3 p-5">
@@ -790,7 +843,7 @@ export function CatalogView({
                     </div>
 
                     <Link
-                      href={`/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
+                      href={`/book/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
                       data-testid={`select-vehicle-${v.plate_number}`}
                       style={{
                         backgroundColor: "var(--primary-600)",

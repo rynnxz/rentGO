@@ -31,7 +31,7 @@ insert into public.vehicles (
     'BK 1124 AAB', 'Honda', 'Brio Satya RS', 2024, 'Putih Mutiara',
     'automatic', 'bensin', 5, 320000, 'active',
     'City car lincah dengan transmisi CVT halus, sensor parkir, dan head unit layar sentuh untuk jalanan pusat Kota Medan.',
-    '/vehicles/city-car.svg'
+    '/vehicles/Honda-Brio-Satya-RS.jfif'
   ),
   (
     '33333333-3333-4333-8333-333333333302',
@@ -39,7 +39,7 @@ insert into public.vehicles (
     'BK 1482 AAC', 'Toyota', 'Agya GR Sport', 2024, 'Kuning',
     'automatic', 'bensin', 5, 300000, 'active',
     'Hatchback irit BBM dengan kabin ergonomis, cocok untuk mobilitas harian maupun perjalanan singkat dari Stasiun Medan.',
-    '/vehicles/city-car.svg'
+    '/vehicles/Toyota-Agya-GR-Sport.jpg'
   ),
   (
     '33333333-3333-4333-8333-333333333303',
@@ -47,11 +47,11 @@ insert into public.vehicles (
     'BK 1750 AAD', 'Toyota', 'Avanza 1.5 G CVT', 2024, 'Hitam Metalik',
     'automatic', 'bensin', 7, 420000, 'active',
     'MPV 7 kursi dengan AC double blower dingin, ruang bagasi lega untuk koper Bandara Kualanamu, dan konsumsi BBM efisien.',
-    '/vehicles/mpv.svg'
+    '/vehicles/Toyota-Avanza-1.5-G-CVT.png'
   ),
   (
     '33333333-3333-4333-8333-333333333304',
-    '11111111-1111-4111-8333-333333333304',
+    '11111111-1111-4111-8111-111111111102',
     'BK 1890 AAE', 'Mitsubishi', 'Xpander Ultimate', 2024, 'Abu-abu Metalik',
     'automatic', 'bensin', 7, 480000, 'active',
     'Suspensi nyaman khas Xpander dengan cruise control dan kabin senyap untuk perjalanan keluarga Medan - Parapat.',
@@ -71,7 +71,7 @@ insert into public.vehicles (
     'BK 1310 AAG', 'Daihatsu', 'Xenia 1.3 R MT', 2023, 'Silver',
     'manual', 'bensin', 7, 360000, 'active',
     'Pilihan MPV manual ekonomis dengan daya angkut 7 penumpang dan biaya sewa harian paling terjangkau.',
-    '/vehicles/mpv.svg'
+    '/vehicles/Daihatsu-Xenia-1.3-R-MT.png'
   ),
   (
     '33333333-3333-4333-8333-333333333307',
@@ -111,7 +111,7 @@ insert into public.vehicles (
     'BK 4112 AAM', 'Yamaha', 'NMAX 155 Connected', 2024, 'Biru Navy',
     'automatic', 'bensin', 2, 140000, 'active',
     'Skutik 155cc posisi duduk rileks, bagasi muat helm, lengkap dengan 2 helm SNI dan jas hujan.',
-    '/vehicles/scooter.svg'
+    '/vehicles/yamaha-nmax-155-connected.png'
   ),
   (
     '33333333-3333-4333-8333-333333333312',
@@ -119,7 +119,7 @@ insert into public.vehicles (
     'BK 4288 AAN', 'Honda', 'Vario 160 ABS', 2024, 'Hitam Doff',
     'automatic', 'bensin', 2, 120000, 'active',
     'Motor matik responsif dengan rem ABS dan soket pengisi daya USB untuk keliling kuliner Kota Medan.',
-    '/vehicles/scooter.svg'
+    '/vehicles/honda-vario-160-abs.jfif'
   )
 on conflict (plate_number) do nothing;
 

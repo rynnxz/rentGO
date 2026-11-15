@@ -1,70 +1,96 @@
 import React from "react";
 
 export function RentGoLogo({
-  variant = "light",
-  subtitle,
   surfaceLabel,
+  subtitle,
+  variant = "light",
 }: {
-  variant?: "dark" | "light";
-  subtitle?: string;
   surfaceLabel?: string;
+  subtitle?: string;
+  variant?: "light" | "dark";
 }) {
+  const isDark = variant === "dark";
   const label = surfaceLabel ?? subtitle;
-  const textColor =
-    variant === "dark" ? "var(--surface-white)" : "var(--navy-900)";
-  const subColor =
-    variant === "dark" ? "var(--primary-100)" : "var(--slate-600)";
 
   return (
-    <span className="inline-flex items-center gap-2.5 select-none">
-      <svg
-        width="36"
-        height="36"
-        viewBox="0 0 36 36"
+    <div
+      className="inline-flex items-center gap-2.5 select-none"
+      aria-label={`RentGo Medan ${label ?? ""}`.trim()}
+    >
+      {/* Minimalist Geometric Typography Slash Mark (Triadic Speed Bars) */}
+      <span
         aria-hidden="true"
-        className="shrink-0"
+        className="inline-flex items-end gap-0.5 py-0.5"
       >
-        <rect
-          x="2"
-          y="2"
-          width="32"
-          height="32"
-          rx="8"
-          fill="var(--navy-900)"
-          stroke="var(--accent-500)"
-          strokeWidth="2"
-        />
-        <path
-          d="M9 22L12.5 14.5C13.1 13.3 14.3 12.5 15.6 12.5H20.4C21.7 12.5 22.9 13.3 23.5 14.5L27 22"
-          stroke="var(--surface-white)"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-        />
-        <circle cx="13" cy="23.5" r="2.5" fill="var(--accent-500)" />
-        <circle cx="23" cy="23.5" r="2.5" fill="var(--accent-500)" />
-        <path
-          d="M14 17.5H22"
-          stroke="var(--accent-500)"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="flex flex-col leading-none">
         <span
-          style={{ color: textColor }}
-          className="text-lg font-extrabold tracking-tight"
-        >
-          Rent<span style={{ color: "var(--accent-500)" }}>Go</span>
-        </span>
+          style={{
+            backgroundColor: isDark ? "var(--surface-white)" : "var(--primary-600)",
+          }}
+          className="h-6 w-1.5 -skew-x-16 rounded-[2px]"
+        />
+        <span
+          style={{ backgroundColor: "var(--secondary-600)" }}
+          className="h-5 w-1.5 -skew-x-16 rounded-[2px]"
+        />
+        <span
+          style={{ backgroundColor: "var(--accent-500)" }}
+          className="h-3.5 w-1.5 -skew-x-16 rounded-[2px]"
+        />
+      </span>
+
+      {/* Pure Editorial Typography Wordmark */}
+      <div className="flex flex-col leading-none">
+        <div className="flex items-baseline tracking-tighter">
+          <span
+            style={{
+              color: isDark ? "var(--surface-white)" : "var(--navy-900)",
+            }}
+            className="text-xl font-black uppercase sm:text-2xl"
+          >
+            RENT
+          </span>
+          <span
+            style={{
+              color: isDark ? "var(--accent-500)" : "var(--primary-600)",
+            }}
+            className="text-xl font-black italic uppercase sm:text-2xl"
+          >
+            GO
+          </span>
+          <span
+            style={{ color: "var(--secondary-600)" }}
+            className="ml-0.5 text-2xl font-black leading-none"
+            aria-hidden="true"
+          >
+            .
+          </span>
+          <span
+            style={{
+              backgroundColor: isDark
+                ? "rgb(255 255 255 / 0.14)"
+                : "var(--slate-100)",
+              color: isDark ? "var(--surface-white)" : "var(--slate-600)",
+              borderColor: isDark
+                ? "rgb(255 255 255 / 0.2)"
+                : "var(--slate-200)",
+            }}
+            className="ml-2 hidden rounded border px-1.5 py-0.5 font-mono text-[9px] font-extrabold tracking-widest uppercase sm:inline-block"
+          >
+            MDN
+          </span>
+        </div>
+
         {label ? (
           <span
-            style={{ color: subColor }}
-            className="text-[11px] font-semibold tracking-wide"
+            style={{
+              color: isDark ? "var(--secondary-100)" : "var(--secondary-700)",
+            }}
+            className="mt-0.5 font-mono text-[9px] font-bold tracking-[0.18em] uppercase"
           >
             {label}
           </span>
         ) : null}
-      </span>
-    </span>
+      </div>
+    </div>
   );
 }

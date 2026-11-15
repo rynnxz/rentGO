@@ -297,7 +297,7 @@ export function MaintenanceManager({
                       <MaintenanceStatusBadge status={log.status} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-1.5">
+                      <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
                         {log.status === "scheduled" ? (
                           <button
                             type="button"
@@ -308,9 +308,10 @@ export function MaintenanceManager({
                             style={{
                               backgroundColor: "var(--warning-bg)",
                               color: "var(--warning-text)",
+                              borderColor: "var(--accent-500)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="min-h-[44px] px-3 py-1.5 text-xs font-semibold"
+                            className="inline-flex min-h-[38px] items-center border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                           >
                             Mulai Servis
                           </button>
@@ -322,11 +323,12 @@ export function MaintenanceManager({
                             disabled={loading}
                             onClick={() => handleStatusUpdate(log, "done")}
                             style={{
-                              backgroundColor: "var(--success-bg)",
-                              color: "var(--success-text)",
+                              backgroundColor: "var(--secondary-50)",
+                              color: "var(--secondary-700)",
+                              borderColor: "var(--secondary-600)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="min-h-[44px] px-3 py-1.5 text-xs font-semibold"
+                            className="inline-flex min-h-[38px] items-center border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                           >
                             Selesai Servis
                           </button>
@@ -339,11 +341,12 @@ export function MaintenanceManager({
                           style={{
                             backgroundColor: "var(--danger-bg)",
                             color: "var(--danger-text)",
+                            borderColor: "var(--danger)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1 px-2.5 py-1.5 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>Hapus</span>
                         </button>
                       </div>
@@ -364,16 +367,48 @@ export function MaintenanceManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-lg border p-6 text-left"
+        className="m-auto w-full max-w-lg overflow-hidden border p-0 text-left"
       >
-        <form onSubmit={handleCreate} className="space-y-4">
-          <h2
-            id="maint-dialog-title"
-            style={{ color: "var(--navy-900)" }}
-            className="text-lg font-bold"
+        <form onSubmit={handleCreate}>
+          <div
+            style={{
+              backgroundColor: "var(--navy-900)",
+              color: "var(--surface-white)",
+            }}
+            className="flex items-center justify-between gap-3 border-b px-6 py-4"
           >
-            Catat Jadwal Servis / Perawatan Armada
-          </h2>
+            <div>
+              <span
+                style={{
+                  backgroundColor: "var(--accent-500)",
+                  color: "var(--navy-900)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase"
+              >
+                Sinkronisasi Bengkel
+              </span>
+              <h2
+                id="maint-dialog-title"
+                className="mt-1 text-lg font-extrabold"
+              >
+                Catat Jadwal Servis / Perawatan Armada
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => dialogRef.current?.close()}
+              style={{
+                backgroundColor: "rgb(255 255 255 / 0.14)",
+                color: "var(--surface-white)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+            >
+              Tutup
+            </button>
+          </div>
+          <div className="space-y-4 p-6">
 
           {errorMsg ? (
             <div
@@ -510,7 +545,7 @@ export function MaintenanceManager({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 border-t pt-4">
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -536,6 +571,7 @@ export function MaintenanceManager({
             >
               {loading ? "Menyimpan..." : "Simpan Jadwal"}
             </button>
+          </div>
           </div>
         </form>
       </dialog>

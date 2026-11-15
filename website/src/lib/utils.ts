@@ -52,6 +52,7 @@ export function formatDateId(dateStr: string): string {
 
 export function resolveSurfaceFromRequest(params: {
   host: string | null;
+  pathname?: string | null;
   siteQuery?: string | null;
   siteCookie?: string | null;
   nodeEnv?: string;
@@ -60,6 +61,14 @@ export function resolveSurfaceFromRequest(params: {
   surface: SurfaceName;
   usedOverride: boolean;
 } {
+  const path = params.pathname ?? "/";
+  if (path === "/admin" || path.startsWith("/admin/")) {
+    return { surface: "admin", usedOverride: false };
+  }
+  if (path === "/book" || path.startsWith("/book/")) {
+    return { surface: "book", usedOverride: false };
+  }
+
   const cleanHost = (params.host ?? "localhost:3000")
     .toLowerCase()
     .split(":")[0]
@@ -69,7 +78,7 @@ export function resolveSurfaceFromRequest(params: {
     .split(":")[0]
     .trim();
 
-  // 1. Subdomain matching on production domain or *.localhost
+  // 1. Legacy subdomain matching on production domain or *.localhost
   if (
     cleanHost === `admin.${rootBase}` ||
     cleanHost === "admin.localhost" ||
@@ -87,7 +96,7 @@ export function resolveSurfaceFromRequest(params: {
   }
 
   // 2. Preview / non-production override (?site=landing|book|admin or cookie __site)
-  // Strictly disabled on production root domain
+  // Strictly disabled on production custom domain
   const isProductionCustomDomain =
     params.nodeEnv === "production" &&
     cleanHost === rootBase &&
@@ -111,33 +120,32 @@ export function resolveSurfaceFromRequest(params: {
 export function buildSurfaceUrl(
   surface: SurfaceName,
   pathname: string = "/",
-  hostHeader?: string | null,
+  _hostHeader?: string | null,
 ): string {
   const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  const cleanHost = (hostHeader ?? "localhost:3000").toLowerCase();
 
-  if (cleanHost.includes("localhost") || cleanHost.startsWith("127.0.0.1")) {
-    const portPart = cleanHost.includes(":")
-      ? `:${cleanHost.split(":")[1]}`
-      : ":3000";
-    if (surface === "landing") {
-      return `http://localhost${portPart}${normalizedPath}`;
-    }
-    return `http://${surface}.localhost${portPart}${normalizedPath}`;
-  }
-
-  if (cleanHost.endsWith(".vercel.app")) {
-    const sep = normalizedPath.includes("?") ? "&" : "?";
-    return `https://${cleanHost}${normalizedPath}${sep}site=${surface}`;
-  }
-
-  const root = (process.env.ROOT_DOMAIN ?? "rentgo.my.id")
-    .replace(/^https?:\/\//, "")
-    .split("/")[0];
   if (surface === "landing") {
-    return `https://${root}${normalizedPath}`;
+    return normalizedPath;
   }
-  return `https://${surface}.${root}${normalizedPath}`;
+
+  const prefix = `/${surface}`;
+  if (
+    normalizedPath === prefix ||
+    normalizedPath.startsWith(`${prefix}/`) ||
+    normalizedPath.startsWith(`${prefix}?`)
+  ) {
+    return normalizedPath;
+  }
+
+  if (normalizedPath === "/") {
+    return prefix;
+  }
+
+  if (normalizedPath.startsWith("/?") || normalizedPath.startsWith("/#")) {
+    return `${prefix}${normalizedPath.slice(1)}`;
+  }
+
+  return `${prefix}${normalizedPath}`;
 }
 
 export function buildWhatsAppBookingUrl(params: {

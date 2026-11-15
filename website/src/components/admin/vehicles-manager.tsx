@@ -45,7 +45,7 @@ export function VehiclesManager({
   const [dailyPrice, setDailyPrice] = useState(400000);
   const [status, setStatus] = useState<VehicleStatus>("active");
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("/vehicles/mpv.svg");
+  const [imageUrl, setImageUrl] = useState("/vehicles/Toyota-Avanza-1.5-G-CVT.png");
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -420,16 +420,16 @@ export function VehiclesManager({
               >
                 <th
                   style={{ backgroundColor: "var(--slate-100)" }}
-                  className="sticky left-0 z-10 px-4 py-3 font-semibold"
+                  className="px-3 py-3 font-semibold"
                 >
                   Unit Kendaraan
                 </th>
-                <th className="px-4 py-3 font-semibold">Plat Nomor</th>
-                <th className="px-4 py-3 font-semibold">Kategori</th>
-                <th className="px-4 py-3 font-semibold">Spesifikasi</th>
-                <th className="px-4 py-3 text-right font-semibold">Tarif / Hari</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 text-right font-semibold">Aksi</th>
+                <th className="px-3 py-3 font-semibold">Plat Nomor</th>
+                <th className="px-3 py-3 font-semibold">Kategori</th>
+                <th className="px-3 py-3 font-semibold">Spesifikasi</th>
+                <th className="px-3 py-3 text-right font-semibold">Tarif / Hari</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 text-right font-semibold">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -452,18 +452,18 @@ export function VehiclesManager({
                         backgroundColor: "var(--surface-white)",
                         color: "var(--navy-900)",
                       }}
-                      className="sticky left-0 z-10 whitespace-nowrap px-4 py-3 font-semibold"
+                      className="px-3 py-2.5 font-semibold"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <img
                           src={v.image_url || "/vehicles/mpv.svg"}
                           alt={`${v.brand} ${v.model}`}
-                          width={56}
-                          height={38}
-                          className="h-9 w-14 rounded border object-cover"
+                          width={52}
+                          height={36}
+                          className="h-9 w-13 shrink-0 rounded border object-cover"
                         />
-                        <div>
-                          <p className="font-bold">
+                        <div className="min-w-0">
+                          <p className="font-bold leading-snug">
                             {v.brand} {v.model}
                           </p>
                           <p
@@ -475,39 +475,40 @@ export function VehiclesManager({
                         </div>
                       </div>
                     </th>
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-bold">
+                    <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs font-bold">
                       {v.plate_number}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs font-semibold">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-xs font-semibold">
                       {v.category_name}
                     </td>
                     <td
                       style={{ color: "var(--slate-600)" }}
-                      className="whitespace-nowrap px-4 py-3 text-xs"
+                      className="px-3 py-2.5 text-xs"
                     >
                       {v.transmission === "automatic" ? "Otomatis" : "Manual"} -{" "}
                       {v.seats} Kursi - {v.fuel.toUpperCase()}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums">
                       {formatRupiah(v.daily_price)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3">
+                    <td className="whitespace-nowrap px-3 py-2.5">
                       <VehicleStatusBadge status={v.status} />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-right">
+                      <div className="inline-flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => openEditDialog(v)}
                           data-testid={`edit-vehicle-${v.plate_number}`}
                           style={{
-                            backgroundColor: "var(--slate-100)",
-                            color: "var(--slate-900)",
+                            backgroundColor: "var(--accent-50)",
+                            color: "var(--warning-text)",
+                            borderColor: "var(--accent-500)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
-                          <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Edit2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>Edit</span>
                         </button>
                         <button
@@ -518,11 +519,12 @@ export function VehiclesManager({
                           style={{
                             backgroundColor: "var(--danger-bg)",
                             color: "var(--danger-text)",
+                            borderColor: "var(--danger)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>Hapus</span>
                         </button>
                       </div>
@@ -582,18 +584,50 @@ export function VehiclesManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-2xl border p-6 text-left"
+        className="m-auto w-full max-w-2xl overflow-hidden border p-0 text-left"
       >
-        <form onSubmit={handleSave} className="space-y-4">
-          <h2
-            id="vehicle-dialog-title"
-            style={{ color: "var(--navy-900)" }}
-            className="text-lg font-bold"
+        <form onSubmit={handleSave}>
+          <div
+            style={{
+              backgroundColor: "var(--navy-900)",
+              color: "var(--surface-white)",
+            }}
+            className="flex items-center justify-between gap-3 border-b px-6 py-4"
           >
-            {editing
-              ? `Edit Kendaraan (${editing.plate_number})`
-              : "Tambah Unit Kendaraan Baru"}
-          </h2>
+            <div>
+              <span
+                style={{
+                  backgroundColor: "var(--accent-500)",
+                  color: "var(--navy-900)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase"
+              >
+                Manajemen Armada Medan
+              </span>
+              <h2
+                id="vehicle-dialog-title"
+                className="mt-1 text-lg font-extrabold"
+              >
+                {editing
+                  ? `Edit Kendaraan (${editing.plate_number})`
+                  : "Tambah Unit Kendaraan Baru"}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => dialogRef.current?.close()}
+              style={{
+                backgroundColor: "rgb(255 255 255 / 0.14)",
+                color: "var(--surface-white)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+            >
+              Tutup
+            </button>
+          </div>
+          <div className="space-y-4 p-6">
 
           {errorMsg ? (
             <div
@@ -806,7 +840,7 @@ export function VehiclesManager({
 
             <div>
               <label htmlFor="v-image" className="block text-xs font-semibold">
-                Ilustrasi / Foto Kendaraan
+                Foto Unit Kendaraan / Placeholder
               </label>
               <div className="mt-1 flex items-center gap-2">
                 <select
@@ -816,25 +850,58 @@ export function VehiclesManager({
                   style={{ borderRadius: "var(--radius-control)" }}
                   className="min-h-[44px] flex-1 border px-3 py-2 text-sm"
                 >
-                  <option value="/vehicles/city-car.svg">Ilustrasi City Car</option>
-                  <option value="/vehicles/mpv.svg">Ilustrasi MPV Keluarga</option>
-                  <option value="/vehicles/suv.svg">Ilustrasi SUV</option>
-                  <option value="/vehicles/van.svg">Ilustrasi Van / Hiace</option>
-                  <option value="/vehicles/scooter.svg">Ilustrasi Motor Matik</option>
+                  <optgroup label="Foto Unit Kendaraan Asli (public/vehicles)">
+                    <option value="/vehicles/Honda-Brio-Satya-RS.jfif">
+                      Foto Honda Brio Satya RS
+                    </option>
+                    <option value="/vehicles/Toyota-Agya-GR-Sport.jpg">
+                      Foto Toyota Agya GR Sport
+                    </option>
+                    <option value="/vehicles/Toyota-Avanza-1.5-G-CVT.png">
+                      Foto Toyota Avanza 1.5 G CVT
+                    </option>
+                    <option value="/vehicles/Daihatsu-Xenia-1.3-R-MT.png">
+                      Foto Daihatsu Xenia 1.3 R MT
+                    </option>
+                    <option value="/vehicles/yamaha-nmax-155-connected.png">
+                      Foto Yamaha NMAX 155 Connected
+                    </option>
+                    <option value="/vehicles/honda-vario-160-abs.jfif">
+                      Foto Honda Vario 160 ABS
+                    </option>
+                  </optgroup>
+                  <optgroup label="Ilustrasi Placeholder Fallback (SVG)">
+                    <option value="/vehicles/city-car.svg">
+                      Placeholder City Car (SVG)
+                    </option>
+                    <option value="/vehicles/mpv.svg">
+                      Placeholder MPV Keluarga (SVG)
+                    </option>
+                    <option value="/vehicles/suv.svg">
+                      Placeholder SUV (SVG)
+                    </option>
+                    <option value="/vehicles/van.svg">
+                      Placeholder Van / Hiace (SVG)
+                    </option>
+                    <option value="/vehicles/scooter.svg">
+                      Placeholder Motor Matik (SVG)
+                    </option>
+                  </optgroup>
                 </select>
                 <label
                   style={{
-                    backgroundColor: "var(--slate-100)",
-                    color: "var(--slate-900)",
+                    backgroundColor: "var(--secondary-50)",
+                    color: "var(--secondary-700)",
+                    borderColor: "var(--secondary-600)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-1 border px-3 py-2 text-xs font-semibold"
+                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-1 border px-3 py-2 text-xs font-bold"
                 >
                   <Upload className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{uploading ? "..." : "Upload"}</span>
+                  <span>{uploading ? "..." : "Upload Cloud"}</span>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,.jfif"
                     onChange={handleFileUpload}
                     className="sr-only"
                   />
@@ -858,7 +925,7 @@ export function VehiclesManager({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 border-t pt-4">
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -884,6 +951,7 @@ export function VehiclesManager({
             >
               {loading ? "Menyimpan..." : "Simpan Kendaraan"}
             </button>
+          </div>
           </div>
         </form>
       </dialog>

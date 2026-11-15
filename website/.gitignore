@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Local runtime data & uploads
+.data/
+public/uploads/
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.*
+!.env.example
+
+# Testing & Vercel artifacts
+coverage/
+playwright-report/
+test-results/
+.vercel/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

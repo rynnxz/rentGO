@@ -270,19 +270,20 @@ export function CategoriesManager({
                     >
                       {cat.description || "-"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="min-w-[180px] px-4 py-3 text-right">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => openEditDialog(cat)}
                           style={{
-                            backgroundColor: "var(--slate-100)",
-                            color: "var(--slate-900)",
+                            backgroundColor: "var(--accent-50)",
+                            color: "var(--warning-text)",
+                            borderColor: "var(--accent-500)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
-                          <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Edit2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>Edit</span>
                         </button>
                         <button
@@ -292,11 +293,12 @@ export function CategoriesManager({
                           style={{
                             backgroundColor: "var(--danger-bg)",
                             color: "var(--danger-text)",
+                            borderColor: "var(--danger)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>Hapus</span>
                         </button>
                       </div>
@@ -317,16 +319,48 @@ export function CategoriesManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-md border p-6 text-left"
+        className="m-auto w-full max-w-md overflow-hidden border p-0 text-left"
       >
-        <form onSubmit={handleSave} className="space-y-4">
-          <h2
-            id="category-dialog-title"
-            style={{ color: "var(--navy-900)" }}
-            className="text-lg font-bold"
+        <form onSubmit={handleSave}>
+          <div
+            style={{
+              backgroundColor: "var(--navy-900)",
+              color: "var(--surface-white)",
+            }}
+            className="flex items-center justify-between gap-3 border-b px-6 py-4"
           >
-            {editing ? "Edit Kategori Kendaraan" : "Tambah Kategori Baru"}
-          </h2>
+            <div>
+              <span
+                style={{
+                  backgroundColor: "var(--accent-500)",
+                  color: "var(--navy-900)",
+                  borderRadius: "var(--radius-badge)",
+                }}
+                className="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase"
+              >
+                Master Kategori Armada
+              </span>
+              <h2
+                id="category-dialog-title"
+                className="mt-1 text-lg font-extrabold"
+              >
+                {editing ? "Edit Kategori Kendaraan" : "Tambah Kategori Baru"}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => dialogRef.current?.close()}
+              style={{
+                backgroundColor: "rgb(255 255 255 / 0.14)",
+                color: "var(--surface-white)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
+            >
+              Tutup
+            </button>
+          </div>
+          <div className="space-y-4 p-6">
 
           {errorMsg ? (
             <div
@@ -409,7 +443,7 @@ export function CategoriesManager({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 border-t pt-4">
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
@@ -434,6 +468,7 @@ export function CategoriesManager({
             >
               {loading ? "Menyimpan..." : "Simpan Kategori"}
             </button>
+          </div>
           </div>
         </form>
       </dialog>

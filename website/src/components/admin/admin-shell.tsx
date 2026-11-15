@@ -1,31 +1,61 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarCheck2,
   CarFront,
+  ExternalLink,
   FolderKanban,
   LayoutDashboard,
-  Palette,
+  Menu,
   ShieldAlert,
   Users,
   Wrench,
-  ExternalLink,
+  X,
 } from "lucide-react";
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
 import type { UserRecord } from "@/lib/types";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dasbor Utama", icon: LayoutDashboard, testId: "nav-admin-dashboard" },
-  { href: "/categories", label: "Kategori Armada", icon: FolderKanban, testId: "nav-admin-categories" },
-  { href: "/vehicles", label: "Data Kendaraan", icon: CarFront, testId: "nav-admin-vehicles" },
-  { href: "/bookings", label: "Pesanan & Pembayaran", icon: CalendarCheck2, testId: "nav-admin-bookings" },
-  { href: "/maintenance", label: "Jadwal Perawatan", icon: Wrench, testId: "nav-admin-maintenance" },
-  { href: "/customers", label: "Data Pelanggan", icon: Users, testId: "nav-admin-customers" },
-  { href: "/_styleguide", label: "Panduan Desain", icon: Palette, testId: "nav-admin-styleguide" },
+  {
+    href: "/admin",
+    label: "Dasbor Utama",
+    icon: LayoutDashboard,
+    testId: "nav-admin-dashboard",
+  },
+  {
+    href: "/admin/categories",
+    label: "Kategori Armada",
+    icon: FolderKanban,
+    testId: "nav-admin-categories",
+  },
+  {
+    href: "/admin/vehicles",
+    label: "Data Kendaraan",
+    icon: CarFront,
+    testId: "nav-admin-vehicles",
+  },
+  {
+    href: "/admin/bookings",
+    label: "Pesanan & Pembayaran",
+    icon: CalendarCheck2,
+    testId: "nav-admin-bookings",
+  },
+  {
+    href: "/admin/maintenance",
+    label: "Jadwal Perawatan",
+    icon: Wrench,
+    testId: "nav-admin-maintenance",
+  },
+  {
+    href: "/admin/customers",
+    label: "Data Pelanggan",
+    icon: Users,
+    testId: "nav-admin-customers",
+  },
 ];
 
 export function AdminShell({
@@ -40,10 +70,10 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() || "/";
-  const isStyleguide = pathname.includes("_styleguide");
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // RBAC Guard for Admin Surface
-  if (!isStyleguide && !user) {
+  // RBAC Guard for Admin Surface (Unauthenticated)
+  if (!user) {
     return (
       <div
         style={{ backgroundColor: "var(--slate-50)" }}
@@ -51,7 +81,7 @@ export function AdminShell({
       >
         <header
           style={{ backgroundColor: "var(--navy-900)" }}
-          className="border-b px-6 py-4"
+          className="sticky top-0 z-40 border-b px-6 py-4 shadow-xs"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
@@ -89,7 +119,7 @@ export function AdminShell({
                 Autentikasi Administrator Diperlukan
               </h1>
               <p style={{ color: "var(--slate-600)" }} className="text-sm">
-                Panel operasional <code>admin.rentgo.my.id</code> hanya dapat diakses oleh petugas resmi RentGo Medan yang terdaftar di <code>ADMIN_EMAILS</code>.
+                Panel operasional <code>rentgo.my.id/admin</code> hanya dapat diakses oleh petugas resmi RentGo Medan yang terdaftar di <code>ADMIN_EMAILS</code>.
               </p>
             </div>
             <div className="flex flex-col items-center justify-center gap-3 pt-2">
@@ -109,7 +139,8 @@ export function AdminShell({
     );
   }
 
-  if (!isStyleguide && user && user.role !== "admin") {
+  // RBAC Guard for Admin Surface (Customer 403)
+  if (user.role !== "admin") {
     return (
       <div
         style={{ backgroundColor: "var(--slate-50)" }}
@@ -117,7 +148,7 @@ export function AdminShell({
       >
         <header
           style={{ backgroundColor: "var(--navy-900)" }}
-          className="border-b px-6 py-4"
+          className="sticky top-0 z-40 border-b px-6 py-4 shadow-xs"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
@@ -206,94 +237,250 @@ export function AdminShell({
       style={{ backgroundColor: "var(--slate-50)" }}
       className="flex min-h-screen flex-col lg:flex-row"
     >
-      {/* Navy Sidebar */}
+      {/* Desktop Sticky Sidebar (Locked to viewport height, never scrolls away) */}
       <aside
-        style={{ backgroundColor: "var(--navy-900)", color: "var(--surface-white)" }}
-        className="w-full shrink-0 lg:w-64 lg:min-h-screen"
+        style={{
+          backgroundColor: "var(--navy-900)",
+          color: "var(--surface-white)",
+        }}
+        className="hidden w-68 shrink-0 flex-col justify-between border-r p-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto"
       >
-        <div className="flex h-full flex-col justify-between p-4 lg:p-5">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="inline-flex items-center">
-                <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
-              </Link>
-            </div>
-
-            <nav aria-label="Navigasi Administrator" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-1">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  item.href === "/"
-                    ? pathname === "/" || pathname === "/site/admin"
-                    : pathname.startsWith(item.href) ||
-                      pathname.startsWith(`/site/admin${item.href}`);
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    data-testid={item.testId}
-                    style={{
-                      backgroundColor: isActive
-                        ? "var(--primary-600)"
-                        : "transparent",
-                      color: "var(--surface-white)",
-                      borderRadius: "var(--radius-control)",
-                    }}
-                    className="flex min-h-[44px] items-center gap-2.5 px-3 py-2 text-xs font-semibold transition-colors hover:opacity-95 lg:text-sm"
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-2">
+            <Link href="/admin" className="inline-flex items-center">
+              <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
+            </Link>
           </div>
 
-          <div
-            style={{
-              borderColor: "rgb(255 255 255 / 0.14)",
-            }}
-            className="mt-6 hidden border-t pt-4 lg:block"
-          >
-            <p className="text-xs font-semibold opacity-80">Pintasan Subdomain</p>
-            <div className="mt-2 flex flex-col gap-1.5 text-xs">
-              <a
-                href={bookSurfaceUrl}
-                className="inline-flex min-h-[36px] items-center justify-between opacity-90 hover:underline"
-              >
-                <span>book.rentgo.my.id</span>
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
-              <a
-                href={landingSurfaceUrl}
-                className="inline-flex min-h-[36px] items-center justify-between opacity-90 hover:underline"
-              >
-                <span>rentgo.my.id</span>
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
-            </div>
+          <nav aria-label="Navigasi Administrator" className="space-y-1.5">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const subRoute = item.href.slice("/admin".length);
+              const isActive =
+                item.href === "/admin"
+                  ? pathname === "/" ||
+                    pathname === "/admin" ||
+                    pathname === "/site/admin"
+                  : pathname.startsWith(item.href) ||
+                    (subRoute && pathname.startsWith(subRoute)) ||
+                    pathname.startsWith(`/site${item.href}`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-testid={item.testId}
+                  style={{
+                    backgroundColor: isActive
+                      ? "var(--primary-600)"
+                      : "transparent",
+                    color: "var(--surface-white)",
+                    borderColor: isActive
+                      ? "var(--accent-500)"
+                      : "transparent",
+                    borderRadius: "var(--radius-control)",
+                  }}
+                  className="flex min-h-[44px] items-center gap-3 border-l-4 px-3.5 py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
+                >
+                  <Icon
+                    className="h-4 w-4 shrink-0"
+                    style={{
+                      color: isActive
+                        ? "var(--accent-500)"
+                        : "var(--secondary-100)",
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div
+          style={{
+            borderColor: "rgb(255 255 255 / 0.14)",
+          }}
+          className="mt-6 border-t pt-4"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wider opacity-75">
+            Pintasan Ekosistem
+          </p>
+          <div className="mt-2 flex flex-col gap-1.5 text-xs">
+            <a
+              href={bookSurfaceUrl}
+              style={{
+                backgroundColor: "rgb(255 255 255 / 0.07)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="inline-flex min-h-[38px] items-center justify-between px-3 py-1.5 font-semibold opacity-95 hover:bg-white/15"
+            >
+              <span>Katalog Booking</span>
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+            <a
+              href={landingSurfaceUrl}
+              style={{
+                backgroundColor: "rgb(255 255 255 / 0.07)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="inline-flex min-h-[38px] items-center justify-between px-3 py-1.5 font-semibold opacity-95 hover:bg-white/15"
+            >
+              <span>Beranda Publik</span>
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content Area + Sticky Top Navbar */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header
           style={{ backgroundColor: "var(--surface-white)" }}
-          className="border-b px-4 py-3 sm:px-6"
+          className="sticky top-0 z-40 border-b shadow-xs"
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p
-                style={{ color: "var(--slate-600)" }}
-                className="text-xs font-semibold uppercase tracking-wider"
-              >
-                Pusat Kendali Operasional Armada Medan
-              </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-3">
+              {/* Mobile Logo & Drawer Button */}
+              <div className="flex items-center gap-2.5 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen((prev) => !prev)}
+                  aria-expanded={mobileDrawerOpen}
+                  aria-label="Toggle Menu Navigasi Admin"
+                  style={{
+                    backgroundColor: "var(--navy-900)",
+                    color: "var(--surface-white)",
+                    borderRadius: "var(--radius-control)",
+                  }}
+                  className="inline-flex h-10 w-10 items-center justify-center"
+                >
+                  {mobileDrawerOpen ? (
+                    <X className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <Menu className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </button>
+                <Link href="/admin" className="inline-flex items-center">
+                  <RentGoLogo surfaceLabel="Admin" variant="light" />
+                </Link>
+              </div>
+
+              <div className="hidden lg:block">
+                <p
+                  style={{ color: "var(--secondary-700)" }}
+                  className="text-xs font-extrabold uppercase tracking-wider"
+                >
+                  Pusat Kendali Operasional Armada Medan (rentgo.my.id/admin)
+                </p>
+              </div>
             </div>
+
             <AuthControls user={user} variant="light" />
           </div>
+
+          {/* Mobile Horizontal Quick-Nav Bar (Always accessible on phones/tablets) */}
+          <nav
+            aria-label="Navigasi Cepat Seluler"
+            style={{ backgroundColor: "var(--slate-50)" }}
+            className="flex items-center gap-1.5 overflow-x-auto border-t px-4 py-2 lg:hidden"
+          >
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const subRoute = item.href.slice("/admin".length);
+              const isActive =
+                item.href === "/admin"
+                  ? pathname === "/" ||
+                    pathname === "/admin" ||
+                    pathname === "/site/admin"
+                  : pathname.startsWith(item.href) ||
+                    (subRoute && pathname.startsWith(subRoute)) ||
+                    pathname.startsWith(`/site${item.href}`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileDrawerOpen(false)}
+                  style={{
+                    backgroundColor: isActive
+                      ? "var(--primary-600)"
+                      : "var(--surface-white)",
+                    color: isActive
+                      ? "var(--surface-white)"
+                      : "var(--navy-900)",
+                    borderColor: isActive
+                      ? "var(--primary-600)"
+                      : "var(--slate-200)",
+                    borderRadius: "var(--radius-control)",
+                  }}
+                  className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 border px-3 py-1.5 text-xs font-bold shadow-2xs"
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Collapsible Mobile Drawer Panel */}
+          {mobileDrawerOpen ? (
+            <div
+              style={{
+                backgroundColor: "var(--navy-900)",
+                color: "var(--surface-white)",
+              }}
+              className="border-t p-4 lg:hidden"
+            >
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    item.href === "/"
+                      ? pathname === "/" || pathname === "/site/admin"
+                      : pathname.startsWith(item.href) ||
+                        pathname.startsWith(`/site/admin${item.href}`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileDrawerOpen(false)}
+                      style={{
+                        backgroundColor: isActive
+                          ? "var(--primary-600)"
+                          : "rgb(255 255 255 / 0.06)",
+                        borderRadius: "var(--radius-control)",
+                      }}
+                      className="flex min-h-[42px] items-center gap-2.5 px-3 py-2 text-xs font-bold"
+                    >
+                      <Icon
+                        className="h-4 w-4 shrink-0"
+                        style={{ color: "var(--accent-500)" }}
+                        aria-hidden="true"
+                      />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-white/15 pt-3 text-xs">
+                <a
+                  href={bookSurfaceUrl}
+                  className="inline-flex items-center gap-1 font-semibold underline"
+                >
+                  <span>Buka Katalog Booking</span>
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+                <a
+                  href={landingSurfaceUrl}
+                  className="inline-flex items-center gap-1 font-semibold underline"
+                >
+                  <span>Beranda Publik</span>
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          ) : null}
         </header>
 
         <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8">

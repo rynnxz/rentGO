@@ -2,7 +2,15 @@
 
 import React, { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Download, Eye, Search } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  Download,
+  MoreHorizontal,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { formatDateId, formatRupiah } from "@/lib/utils";
 import { getAllowedNextStatuses } from "@/lib/booking-state";
 import {
@@ -23,6 +31,12 @@ const STATUS_ACTION_LABELS: Record<BookingStatus, string> = {
   cancelled: "Batalkan",
   rejected: "Tolak",
   expired: "Kedaluwarsa",
+};
+
+const COMPACT_PRIMARY_LABELS: Partial<Record<BookingStatus, string>> = {
+  confirmed: "Konfirmasi",
+  ongoing: "Mulai Sewa",
+  completed: "Selesaikan",
 };
 
 export function BookingsManager({
@@ -93,7 +107,6 @@ export function BookingsManager({
       setFeedback(
         `Status pesanan ${booking.booking_code} berhasil diubah menjadi "${STATUS_ACTION_LABELS[nextStatus]}".`,
       );
-      router.refresh();
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal memperbarui status.",
@@ -135,7 +148,6 @@ export function BookingsManager({
       setFeedback(
         `Status pembayaran pesanan ${booking.booking_code} diperbarui menjadi "${paymentStatus.toUpperCase()}".`,
       );
-      router.refresh();
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -289,17 +301,16 @@ export function BookingsManager({
               >
                 <th
                   style={{ backgroundColor: "var(--slate-100)" }}
-                  className="sticky left-0 z-10 px-4 py-3 font-semibold"
+                  className="px-3 py-3 font-semibold"
                 >
-                  Kode Booking
+                  Pesanan & Penyewa
                 </th>
-                <th className="px-4 py-3 font-semibold">Penyewa</th>
-                <th className="px-4 py-3 font-semibold">Kendaraan</th>
-                <th className="px-4 py-3 font-semibold">Tanggal & Lokasi</th>
-                <th className="px-4 py-3 text-right font-semibold">Total Tagihan</th>
-                <th className="px-4 py-3 font-semibold">Status & Pembayaran</th>
-                <th className="px-4 py-3 text-right font-semibold">
-                  Transisi Status / Aksi
+                <th className="px-2.5 py-3 font-semibold">Kendaraan</th>
+                <th className="px-2.5 py-3 font-semibold">Tanggal & Lokasi</th>
+                <th className="px-2.5 py-3 text-right font-semibold">Tagihan</th>
+                <th className="px-2.5 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 text-right font-semibold">
+                  Transisi Status & Menu Aksi
                 </th>
               </tr>
             </thead>
@@ -307,7 +318,7 @@ export function BookingsManager({
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     style={{ color: "var(--slate-600)" }}
                     className="px-4 py-8 text-center text-sm"
                   >
@@ -320,6 +331,15 @@ export function BookingsManager({
                     b.status,
                     "admin",
                   );
+                  const primaryNext = allowedNext.find(
+                    (item) =>
+                      item.status === "confirmed" ||
+                      item.status === "ongoing" ||
+                      item.status === "completed",
+                  );
+                  const extraActionCount =
+                    allowedNext.length - (primaryNext ? 1 : 0);
+
                   return (
                     <tr
                       key={b.id}
@@ -331,28 +351,25 @@ export function BookingsManager({
                           backgroundColor: "var(--surface-white)",
                           color: "var(--navy-900)",
                         }}
-                        className="sticky left-0 z-10 whitespace-nowrap px-4 py-3 font-mono text-xs font-bold"
+                        className="px-3 py-2.5 font-normal"
                       >
-                        {b.booking_code}
-                      </th>
-                      <td className="px-4 py-3">
-                        <p
-                          style={{ color: "var(--navy-900)" }}
-                          className="font-semibold"
-                        >
+                        <p className="font-mono text-xs font-extrabold">
+                          {b.booking_code}
+                        </p>
+                        <p className="text-xs font-semibold leading-snug">
                           {b.user_name}
                         </p>
                         <p
                           style={{ color: "var(--slate-600)" }}
-                          className="text-xs"
+                          className="text-[11px]"
                         >
                           {b.user_phone || b.user_email}
                         </p>
-                      </td>
-                      <td className="px-4 py-3">
+                      </th>
+                      <td className="max-w-[150px] px-2.5 py-2.5">
                         <p
                           style={{ color: "var(--navy-900)" }}
-                          className="font-semibold"
+                          className="truncate font-semibold leading-snug"
                         >
                           {b.vehicle_brand} {b.vehicle_model}
                         </p>
@@ -363,29 +380,34 @@ export function BookingsManager({
                           {b.vehicle_plate}
                         </p>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs tabular-nums">
-                        <p className="font-semibold">
+                      <td className="max-w-[165px] px-2.5 py-2.5 text-xs tabular-nums">
+                        <p className="font-semibold leading-snug">
                           {formatDateId(b.start_date)} -{" "}
-                          {formatDateId(b.end_date)} ({b.total_days} hari)
+                          {formatDateId(b.end_date)} ({b.total_days} hr)
                         </p>
-                        <p style={{ color: "var(--slate-600)" }}>
-                          Ambil: {b.pickup_location}
+                        <p
+                          style={{ color: "var(--slate-600)" }}
+                          className="truncate"
+                        >
+                          {b.pickup_location}
                         </p>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums">
+                      <td className="whitespace-nowrap px-2.5 py-2.5 text-right font-bold tabular-nums">
                         {formatRupiah(b.total_price)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex flex-col items-start gap-1.5">
+                      <td className="whitespace-nowrap px-2.5 py-2.5">
+                        <div className="flex flex-col items-start gap-1">
                           <BookingStatusBadge status={b.status} />
                           {b.payment ? (
                             <PaymentStatusBadge status={b.payment.status} />
                           ) : null}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right">
-                        <div className="flex flex-wrap items-center justify-end gap-1.5">
-                          {b.payment && b.payment.status !== "paid" ? (
+                      <td className="whitespace-nowrap px-2.5 py-2.5 text-right">
+                        <div className="inline-flex items-center justify-end gap-1 whitespace-nowrap">
+                          {b.payment &&
+                          (b.payment.status !== "paid" ||
+                            b.status === "pending") ? (
                             <button
                               type="button"
                               disabled={loading}
@@ -394,63 +416,73 @@ export function BookingsManager({
                               }
                               data-testid={`verify-paid-${b.booking_code}`}
                               style={{
-                                backgroundColor: "var(--success-bg)",
-                                color: "var(--success-text)",
-                                borderColor: "var(--success)",
+                                backgroundColor: "var(--secondary-50)",
+                                color: "var(--secondary-700)",
+                                borderColor: "var(--secondary-600)",
                                 borderRadius: "var(--radius-control)",
                               }}
-                              className="inline-flex min-h-[44px] items-center gap-1 border px-2.5 py-1.5 text-xs font-semibold"
+                              className="inline-flex min-h-[34px] items-center gap-1 border px-2 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
                             >
                               <CheckCircle2
-                                className="h-3.5 w-3.5"
+                                className="h-3 w-3 shrink-0"
                                 aria-hidden="true"
                               />
-                              <span>Set Lunas</span>
+                              <span>
+                                {b.payment.status === "paid"
+                                  ? "Verifikasi"
+                                  : "Set Lunas"}
+                              </span>
                             </button>
                           ) : null}
 
-                          {allowedNext.map((nextItem) => {
-                            const isPrimary =
-                              nextItem.status === "confirmed" ||
-                              nextItem.status === "ongoing" ||
-                              nextItem.status === "completed";
-                            return (
-                              <button
-                                key={nextItem.status}
-                                type="button"
-                                disabled={loading}
-                                onClick={() =>
-                                  handleStatusTransition(b, nextItem.status)
-                                }
-                                data-testid={`transition-${b.booking_code}-${nextItem.status}`}
-                                style={{
-                                  backgroundColor: isPrimary
-                                    ? "var(--primary-600)"
-                                    : "var(--danger-bg)",
-                                  color: isPrimary
-                                    ? "var(--surface-white)"
-                                    : "var(--danger-text)",
-                                  borderRadius: "var(--radius-control)",
-                                }}
-                                className="inline-flex min-h-[44px] items-center px-3 py-1.5 text-xs font-semibold"
-                              >
-                                {STATUS_ACTION_LABELS[nextItem.status]}
-                              </button>
-                            );
-                          })}
+                          {primaryNext ? (
+                            <button
+                              type="button"
+                              disabled={loading}
+                              onClick={() =>
+                                handleStatusTransition(b, primaryNext.status)
+                              }
+                              data-testid={`transition-${b.booking_code}-${primaryNext.status}`}
+                              style={{
+                                backgroundColor: "var(--primary-600)",
+                                color: "var(--surface-white)",
+                                borderColor: "var(--primary-700)",
+                                borderRadius: "var(--radius-control)",
+                              }}
+                              className="inline-flex min-h-[34px] items-center border px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                            >
+                              {COMPACT_PRIMARY_LABELS[primaryNext.status] ??
+                                STATUS_ACTION_LABELS[primaryNext.status]}
+                            </button>
+                          ) : null}
 
                           <button
                             type="button"
                             onClick={() => openDetail(b)}
+                            data-testid={`open-actions-${b.booking_code}`}
                             style={{
-                              backgroundColor: "var(--slate-100)",
-                              color: "var(--slate-900)",
+                              backgroundColor: "var(--navy-900)",
+                              color: "var(--surface-white)",
+                              borderColor: "var(--navy-800)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="inline-flex min-h-[44px] items-center gap-1 px-2.5 py-1.5 text-xs font-semibold"
+                            className="inline-flex min-h-[34px] items-center gap-1 border px-2 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                            title="Buka modal detail pesanan dan semua menu aksi transisi status"
                           >
-                            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Detail</span>
+                            <MoreHorizontal
+                              style={{ color: "var(--accent-500)" }}
+                              className="h-3.5 w-3.5 shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span>
+                              {extraActionCount > 0
+                                ? `Semua Aksi (+${extraActionCount})`
+                                : "Semua Aksi"}
+                            </span>
+                            <ChevronDown
+                              className="h-3 w-3 shrink-0 opacity-80"
+                              aria-hidden="true"
+                            />
                           </button>
                         </div>
                       </td>
@@ -463,7 +495,7 @@ export function BookingsManager({
         </div>
       </div>
 
-      {/* Native <dialog> for Booking Detail & Payment Verification */}
+      {/* Native <dialog> for Booking Detail, Full Action Menu & Payment Verification */}
       <dialog
         ref={detailDialogRef}
         aria-labelledby="booking-detail-dialog-title"
@@ -471,155 +503,283 @@ export function BookingsManager({
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="m-auto w-full max-w-xl border p-6 text-left"
+        className="m-auto w-full max-w-2xl overflow-hidden border p-0 text-left"
       >
         {selected ? (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
+          <div>
+            {/* Modal Sticky Header */}
+            <div
+              style={{
+                backgroundColor: "var(--navy-900)",
+                color: "var(--surface-white)",
+              }}
+              className="flex items-start justify-between gap-3 border-b px-6 py-4"
+            >
               <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    style={{
+                      backgroundColor: "var(--accent-500)",
+                      color: "var(--navy-900)",
+                      borderRadius: "var(--radius-badge)",
+                    }}
+                    className="px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                  >
+                    Menu Aksi & Detail Pesanan
+                  </span>
+                  <BookingStatusBadge status={selected.status} />
+                </div>
                 <h2
                   id="booking-detail-dialog-title"
-                  style={{ color: "var(--navy-900)" }}
-                  className="font-mono text-lg font-bold"
+                  className="mt-1.5 font-mono text-lg font-extrabold"
                 >
                   {selected.booking_code}
                 </h2>
-                <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                <p className="text-xs opacity-85">
                   {selected.vehicle_brand} {selected.vehicle_model} (
                   {selected.vehicle_plate})
                 </p>
               </div>
-              <BookingStatusBadge status={selected.status} />
-            </div>
-
-            <div
-              style={{
-                backgroundColor: "var(--slate-50)",
-                borderRadius: "var(--radius-control)",
-              }}
-              className="grid gap-3 border p-4 text-xs sm:grid-cols-2"
-            >
-              <div>
-                <p style={{ color: "var(--slate-600)" }}>Nama Pelanggan</p>
-                <p className="font-semibold">{selected.user_name}</p>
-              </div>
-              <div>
-                <p style={{ color: "var(--slate-600)" }}>Nomor HP / SIM</p>
-                <p className="font-mono font-semibold">
-                  {selected.user_phone || "-"} /{" "}
-                  {selected.user_license_no || "-"}
-                </p>
-              </div>
-              <div>
-                <p style={{ color: "var(--slate-600)" }}>Lokasi Ambil & Kembali</p>
-                <p className="font-semibold">
-                  {selected.pickup_location} → {selected.return_location}
-                </p>
-              </div>
-              <div>
-                <p style={{ color: "var(--slate-600)" }}>Total Tagihan</p>
-                <p className="font-bold tabular-nums">
-                  {formatRupiah(selected.total_price)} ({selected.total_days}{" "}
-                  hari)
-                </p>
-              </div>
-            </div>
-
-            {selected.payment ? (
-              <div className="space-y-2 border-t pt-3 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold">
-                    Metode Pembayaran:{" "}
-                    {selected.payment.method.toUpperCase()}
-                  </span>
-                  <PaymentStatusBadge status={selected.payment.status} />
-                </div>
-                {selected.payment.proof_url ? (
-                  <div className="mt-2">
-                    <p
-                      style={{ color: "var(--slate-600)" }}
-                      className="mb-1 font-semibold"
-                    >
-                      Bukti Pembayaran Pelanggan:
-                    </p>
-                    <img
-                      src={selected.payment.proof_url}
-                      alt="Bukti pembayaran"
-                      width={260}
-                      height={160}
-                      className="max-h-40 rounded border object-contain"
-                    />
-                  </div>
-                ) : (
-                  <p style={{ color: "var(--slate-600)" }}>
-                    Pelanggan belum mengunggah bukti pembayaran.
-                  </p>
-                )}
-
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => handlePaymentVerification(selected, "paid")}
-                    style={{
-                      backgroundColor: "var(--success-bg)",
-                      color: "var(--success-text)",
-                      borderRadius: "var(--radius-control)",
-                    }}
-                    className="min-h-[44px] px-3 py-2 text-xs font-semibold"
-                  >
-                    Tandai Lunas (Paid)
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() =>
-                      handlePaymentVerification(selected, "refunded")
-                    }
-                    style={{
-                      backgroundColor: "var(--info-bg)",
-                      color: "var(--info-text)",
-                      borderRadius: "var(--radius-control)",
-                    }}
-                    className="min-h-[44px] px-3 py-2 text-xs font-semibold"
-                  >
-                    Tandai Refund
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="space-y-2 border-t pt-3">
-              <label
-                htmlFor="admin-notes-input"
-                className="block text-xs font-semibold"
-              >
-                Catatan Internal Admin
-              </label>
-              <textarea
-                id="admin-notes-input"
-                rows={2}
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Catatan serah terima kunci, kondisi BBM, atau alasan penolakan..."
-                style={{ borderRadius: "var(--radius-control)" }}
-                className="w-full border px-3 py-2 text-xs"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => detailDialogRef.current?.close()}
+                aria-label="Tutup Modal"
                 style={{
-                  backgroundColor: "var(--slate-100)",
-                  color: "var(--slate-900)",
+                  backgroundColor: "rgb(255 255 255 / 0.12)",
+                  color: "var(--surface-white)",
                   borderRadius: "var(--radius-control)",
                 }}
-                className="min-h-[44px] px-4 py-2 text-xs font-semibold"
+                className="inline-flex h-9 w-9 items-center justify-center hover:bg-white/20"
               >
-                Tutup
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
+            </div>
+
+            <div className="space-y-5 p-6">
+              {/* 1. Semua Menu Aksi Transisi Status (Collapsible overflow actions placed neatly inside modal) */}
+              <div
+                style={{
+                  backgroundColor: "var(--primary-50)",
+                  borderColor: "var(--primary-600)",
+                  borderRadius: "var(--radius-card)",
+                }}
+                className="space-y-3 border p-4"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p
+                    style={{ color: "var(--navy-900)" }}
+                    className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider"
+                  >
+                    <SlidersHorizontal
+                      className="h-3.5 w-3.5"
+                      style={{ color: "var(--primary-600)" }}
+                      aria-hidden="true"
+                    />
+                    <span>Semua Menu Aksi Transisi Status Booking</span>
+                  </p>
+                  <span
+                    style={{ color: "var(--slate-600)" }}
+                    className="text-[11px] font-semibold"
+                  >
+                    Status Saat Ini: {STATUS_ACTION_LABELS[selected.status]}
+                  </span>
+                </div>
+
+                {getAllowedNextStatuses(selected.status, "admin").length ===
+                0 ? (
+                  <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                    Pesanan ini berada pada status terminal (
+                    <strong>{selected.status.toUpperCase()}</strong>) sehingga
+                    tidak ada transisi status lanjutan.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {getAllowedNextStatuses(selected.status, "admin").map(
+                      (nextItem) => {
+                        const isPrimary =
+                          nextItem.status === "confirmed" ||
+                          nextItem.status === "ongoing" ||
+                          nextItem.status === "completed";
+                        return (
+                          <button
+                            key={nextItem.status}
+                            type="button"
+                            disabled={loading}
+                            onClick={() =>
+                              handleStatusTransition(
+                                selected,
+                                nextItem.status,
+                                adminNotes,
+                              )
+                            }
+                            data-testid={`modal-transition-${selected.booking_code}-${nextItem.status}`}
+                            style={{
+                              backgroundColor: isPrimary
+                                ? "var(--primary-600)"
+                                : "var(--danger-bg)",
+                              color: isPrimary
+                                ? "var(--surface-white)"
+                                : "var(--danger-text)",
+                              borderColor: isPrimary
+                                ? "var(--primary-700)"
+                                : "var(--danger)",
+                              borderRadius: "var(--radius-control)",
+                            }}
+                            className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold shadow-2xs transition-opacity hover:opacity-90"
+                          >
+                            <span>{STATUS_ACTION_LABELS[nextItem.status]}</span>
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Ringkasan Data Pelanggan & Unit */}
+              <div
+                style={{
+                  backgroundColor: "var(--slate-50)",
+                  borderRadius: "var(--radius-control)",
+                }}
+                className="grid gap-3 border p-4 text-xs sm:grid-cols-2"
+              >
+                <div>
+                  <p style={{ color: "var(--slate-600)" }}>Nama Pelanggan</p>
+                  <p className="font-bold">{selected.user_name}</p>
+                  <p style={{ color: "var(--slate-600)" }}>
+                    {selected.user_email}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: "var(--slate-600)" }}>Nomor HP / SIM</p>
+                  <p className="font-mono font-bold">
+                    {selected.user_phone || "-"} /{" "}
+                    {selected.user_license_no || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: "var(--slate-600)" }}>
+                    Lokasi Ambil & Kembali
+                  </p>
+                  <p className="font-bold">
+                    {selected.pickup_location} → {selected.return_location}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: "var(--slate-600)" }}>
+                    Total Tagihan & Durasi
+                  </p>
+                  <p className="font-extrabold tabular-nums">
+                    {formatRupiah(selected.total_price)} ({selected.total_days}{" "}
+                    hari)
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Aksi & Bukti Pembayaran QRIS */}
+              {selected.payment ? (
+                <div className="space-y-3 rounded-lg border p-4 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-bold">
+                      Metode Pembayaran:{" "}
+                      {selected.payment.method.toUpperCase()} (Midtrans Sandbox)
+                    </span>
+                    <PaymentStatusBadge status={selected.payment.status} />
+                  </div>
+                  {selected.payment.proof_url ? (
+                    <div className="mt-2">
+                      <p
+                        style={{ color: "var(--slate-600)" }}
+                        className="mb-1.5 font-semibold"
+                      >
+                        Bukti Pembayaran Pelanggan:
+                      </p>
+                      <img
+                        src={selected.payment.proof_url}
+                        alt="Bukti pembayaran"
+                        width={260}
+                        height={160}
+                        className="max-h-40 rounded border bg-slate-50 object-contain p-1"
+                      />
+                    </div>
+                  ) : (
+                    <p style={{ color: "var(--slate-600)" }}>
+                      Pelanggan belum mengunggah tangkapan layar bukti bayar.
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() =>
+                        handlePaymentVerification(selected, "paid")
+                      }
+                      style={{
+                        backgroundColor: "var(--secondary-50)",
+                        color: "var(--secondary-700)",
+                        borderColor: "var(--secondary-600)",
+                        borderRadius: "var(--radius-control)",
+                      }}
+                      className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>Tandai Lunas (Paid)</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() =>
+                        handlePaymentVerification(selected, "refunded")
+                      }
+                      style={{
+                        backgroundColor: "var(--info-bg)",
+                        color: "var(--info-text)",
+                        borderColor: "var(--info)",
+                        borderRadius: "var(--radius-control)",
+                      }}
+                      className="inline-flex min-h-[40px] items-center border px-3.5 py-2 text-xs font-bold"
+                    >
+                      Tandai Refund
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* 4. Catatan Internal Admin */}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="admin-notes-input"
+                  className="block text-xs font-bold"
+                >
+                  Catatan Internal Admin
+                </label>
+                <textarea
+                  id="admin-notes-input"
+                  rows={2}
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Catatan serah terima kunci, kondisi BBM, atau alasan pembatalan/penolakan..."
+                  style={{ borderRadius: "var(--radius-control)" }}
+                  className="w-full border px-3 py-2 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t pt-4">
+                <button
+                  type="button"
+                  onClick={() => detailDialogRef.current?.close()}
+                  style={{
+                    backgroundColor: "var(--slate-100)",
+                    color: "var(--slate-900)",
+                    borderRadius: "var(--radius-control)",
+                  }}
+                  className="min-h-[42px] px-4 py-2 text-xs font-bold"
+                >
+                  Tutup Modal
+                </button>
+              </div>
             </div>
           </div>
         ) : null}

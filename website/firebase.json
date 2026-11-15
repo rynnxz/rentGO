@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "RentGo Medan",
+        "supportEmail": "akbarriansyah339@gmail.com"
+      }
+    }
+  }
+}

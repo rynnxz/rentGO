@@ -63,7 +63,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/vehicles"
+            href="/admin/vehicles"
             style={{
               backgroundColor: "var(--primary-600)",
               color: "var(--surface-white)",
@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
             + Kelola Unit Armada
           </Link>
           <Link
-            href="/bookings"
+            href="/admin/bookings"
             style={{
               backgroundColor: "var(--surface-white)",
               color: "var(--navy-900)",
@@ -548,7 +548,7 @@ export default async function AdminDashboardPage() {
             </p>
           </div>
           <Link
-            href="/bookings"
+            href="/admin/bookings"
             style={{ color: "var(--primary-600)" }}
             className="inline-flex min-h-[44px] items-center text-xs font-semibold underline"
           >

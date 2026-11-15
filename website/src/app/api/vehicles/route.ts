@@ -1,26 +1,40 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthError, requireAdminUser } from "@/lib/rbac";
-import { createVehicle, listVehicles } from "@/lib/repository";
+import {
+  createVehicle,
+  getPersistenceModeStatus,
+  listVehicles,
+} from "@/lib/repository";
 import { vehicleSchema } from "@/lib/validators";
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
-  const vehicles = await listVehicles({
-    search: sp.get("search") ?? undefined,
-    categorySlug: sp.get("category") ?? undefined,
-    categoryId: sp.get("categoryId") ?? undefined,
-    status: sp.get("status") ?? undefined,
-    transmission: sp.get("transmission") ?? undefined,
-    minSeats: sp.get("minSeats") ? Number(sp.get("minSeats")) : undefined,
-    maxPrice: sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined,
-    startDate: sp.get("startDate") ?? undefined,
-    endDate: sp.get("endDate") ?? undefined,
-    onlyAvailable:
-      sp.get("available") === "true" || sp.get("onlyAvailable") === "true",
-    sort: (sp.get("sort") as "price_asc" | "price_desc" | "newest") || "price_asc",
-  });
+  const [vehicles, persistence] = await Promise.all([
+    listVehicles({
+      search: sp.get("search") ?? undefined,
+      categorySlug: sp.get("category") ?? undefined,
+      categoryId: sp.get("categoryId") ?? undefined,
+      status: sp.get("status") ?? undefined,
+      transmission: sp.get("transmission") ?? undefined,
+      minSeats: sp.get("minSeats") ? Number(sp.get("minSeats")) : undefined,
+      maxPrice: sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined,
+      startDate: sp.get("startDate") ?? undefined,
+      endDate: sp.get("endDate") ?? undefined,
+      onlyAvailable:
+        sp.get("available") === "true" || sp.get("onlyAvailable") === "true",
+      sort:
+        (sp.get("sort") as "price_asc" | "price_desc" | "newest") ||
+        "price_asc",
+    }),
+    getPersistenceModeStatus(),
+  ]);
 
-  return NextResponse.json({ data: vehicles, vehicles });
+  return NextResponse.json({
+    data: vehicles,
+    vehicles,
+    persistence_mode: persistence.mode,
+    supabase_configured: persistence.supabaseConfigured,
+  });
 }
 
 export async function POST(request: NextRequest) {

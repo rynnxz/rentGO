@@ -20,33 +20,52 @@ export function BookNavbar({
   const pathname = usePathname() || "/";
 
   const navItems = [
-    { href: "/", label: "Katalog Armada", icon: CarFront, testId: "nav-book-catalog" },
-    { href: "/bookings", label: "Pesanan Saya", icon: CalendarCheck, testId: "nav-book-bookings" },
-    { href: "/profile", label: "Profil & SIM", icon: User, testId: "nav-book-profile" },
+    {
+      href: "/book",
+      label: "Katalog Armada",
+      icon: CarFront,
+      testId: "nav-book-catalog",
+    },
+    {
+      href: "/book/bookings",
+      label: "Pesanan Saya",
+      icon: CalendarCheck,
+      testId: "nav-book-bookings",
+    },
+    {
+      href: "/book/profile",
+      label: "Profil & SIM",
+      icon: User,
+      testId: "nav-book-profile",
+    },
   ];
 
   return (
     <header
       style={{ backgroundColor: "var(--surface-white)" }}
-      className="sticky top-0 z-30 border-b"
+      className="sticky top-0 z-40 border-b shadow-xs"
     >
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="inline-flex items-center">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2.5 px-4 py-2.5 sm:px-6">
+        <div className="flex shrink-0 items-center gap-4 lg:gap-5">
+          <Link href="/book" className="inline-flex shrink-0 items-center">
             <RentGoLogo surfaceLabel="Booking App" variant="light" />
           </Link>
 
           <nav
             aria-label="Navigasi Aplikasi Penyewaan"
-            className="hidden items-center gap-1 md:flex"
+            className="hidden items-center gap-1 whitespace-nowrap md:flex"
           >
             {navItems.map((item) => {
               const Icon = item.icon;
+              const subRoute = item.href.slice("/book".length);
               const isActive =
-                item.href === "/"
-                  ? pathname === "/" || pathname === "/site/book"
+                item.href === "/book"
+                  ? pathname === "/" ||
+                    pathname === "/book" ||
+                    pathname === "/site/book"
                   : pathname.startsWith(item.href) ||
-                    pathname.startsWith(`/site/book${item.href}`);
+                    (subRoute && pathname.startsWith(subRoute)) ||
+                    pathname.startsWith(`/site${item.href}`);
 
               return (
                 <Link
@@ -55,16 +74,16 @@ export function BookNavbar({
                   data-testid={item.testId}
                   style={{
                     backgroundColor: isActive
-                      ? "var(--primary-50)"
+                      ? "var(--primary-600)"
                       : "transparent",
                     color: isActive
-                      ? "var(--primary-700)"
+                      ? "var(--surface-white)"
                       : "var(--slate-900)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="inline-flex min-h-[44px] items-center gap-2 px-3.5 py-2 text-sm font-semibold transition-colors hover:opacity-90"
+                  className="inline-flex min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-colors hover:opacity-90"
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -72,11 +91,11 @@ export function BookNavbar({
           </nav>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <a
             href={landingUrl}
             style={{ color: "var(--slate-600)" }}
-            className="hidden min-h-[44px] items-center px-2.5 text-xs font-semibold hover:underline sm:inline-flex"
+            className="hidden min-h-[40px] items-center px-2 text-xs font-bold hover:underline lg:inline-flex"
           >
             Beranda Utama
           </a>
@@ -89,10 +108,10 @@ export function BookNavbar({
                 color: "var(--surface-white)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+              className="inline-flex min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
             >
               <ShieldCheck
-                className="h-4 w-4"
+                className="h-3.5 w-3.5 shrink-0"
                 style={{ color: "var(--accent-500)" }}
                 aria-hidden="true"
               />
@@ -103,30 +122,40 @@ export function BookNavbar({
         </div>
       </div>
 
-      {/* Mobile Bottom / Sub Bar */}
+      {/* Mobile Sub-Navigation Bar */}
       <nav
         aria-label="Navigasi Seluler"
-        className="flex items-center justify-around border-t px-2 py-1.5 md:hidden"
+        style={{ backgroundColor: "var(--slate-50)" }}
+        className="flex items-center justify-around gap-1 overflow-x-auto border-t px-2 py-1.5 md:hidden"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
+          const subRoute = item.href.slice("/book".length);
           const isActive =
-            item.href === "/"
-              ? pathname === "/" || pathname === "/site/book"
+            item.href === "/book"
+              ? pathname === "/" ||
+                pathname === "/book" ||
+                pathname === "/site/book"
               : pathname.startsWith(item.href) ||
-                pathname.startsWith(`/site/book${item.href}`);
+                (subRoute && pathname.startsWith(subRoute)) ||
+                pathname.startsWith(`/site${item.href}`);
 
           return (
             <Link
               key={item.href}
               href={item.href}
               style={{
-                color: isActive ? "var(--primary-600)" : "var(--slate-600)",
+                backgroundColor: isActive
+                  ? "var(--primary-600)"
+                  : "transparent",
+                color: isActive
+                  ? "var(--surface-white)"
+                  : "var(--slate-600)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="flex min-h-[44px] items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
+              className="flex min-h-[40px] shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
             >
-              <Icon className="h-4 w-4" aria-hidden="true" />
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{item.label}</span>
             </Link>
           );

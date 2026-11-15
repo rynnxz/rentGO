@@ -8,8 +8,8 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  CreditCard,
   MapPin,
+  QrCode,
   ShieldCheck,
 } from "lucide-react";
 import { calculateRentalDays } from "@/lib/pricing";
@@ -31,7 +31,6 @@ export function VehicleCheckoutView({
   user,
   initialStartDate,
   initialEndDate,
-  bankInfo,
 }: {
   vehicle: VehicleWithCategory;
   blockedRanges: Array<{
@@ -43,7 +42,7 @@ export function VehicleCheckoutView({
   user: UserRecord | null;
   initialStartDate: string;
   initialEndDate: string;
-  bankInfo: string;
+  bankInfo?: string;
 }) {
   const router = useRouter();
   const [startDate, setStartDate] = useState(initialStartDate);
@@ -54,8 +53,7 @@ export function VehicleCheckoutView({
   const [returnLocation, setReturnLocation] = useState<string>(
     PICKUP_LOCATIONS[0],
   );
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("transfer");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("qris");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [driverLicenseNo, setDriverLicenseNo] = useState(
     user?.driver_license_no ?? "",
@@ -63,6 +61,8 @@ export function VehicleCheckoutView({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isPlaceholderImage = !vehicle.image_url || vehicle.image_url.endsWith(".svg");
 
   const rentalDays = useMemo(() => {
     try {
@@ -94,7 +94,7 @@ export function VehicleCheckoutView({
           end_date: endDate,
           pickup_location: pickupLocation,
           return_location: returnLocation,
-          payment_method: paymentMethod,
+          payment_method: "qris",
           phone: phone.trim(),
           driver_license_no: driverLicenseNo.trim(),
           notes: notes.trim() || null,
@@ -104,8 +104,7 @@ export function VehicleCheckoutView({
       if (!res.ok) {
         throw new Error(json.error || "Gagal memproses pemesanan.");
       }
-      router.push(`/bookings/${json.data.id}`);
-      router.refresh();
+      router.push(`/book/bookings/${json.data.id}`);
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal memproses pemesanan.",
@@ -118,7 +117,7 @@ export function VehicleCheckoutView({
     <div className="space-y-6" data-testid="vehicle-checkout-view">
       <div>
         <Link
-          href={`/?start=${startDate}&end=${endDate}`}
+          href={`/book?start=${startDate}&end=${endDate}`}
           style={{ color: "var(--primary-600)" }}
           className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-semibold hover:underline"
         >
@@ -141,15 +140,38 @@ export function VehicleCheckoutView({
           >
             <div
               style={{ backgroundColor: "var(--slate-100)" }}
-              className="flex h-64 items-center justify-center border-b p-6"
+              className="relative flex h-64 items-center justify-center border-b p-6"
             >
               <img
                 src={vehicle.image_url || "/vehicles/mpv.svg"}
                 alt={`${vehicle.brand} ${vehicle.model}`}
                 width={420}
                 height={230}
-                className="max-h-52 w-auto object-contain"
+                className="max-h-52 w-auto rounded object-contain"
               />
+              {isPlaceholderImage ? (
+                <span
+                  style={{
+                    backgroundColor: "var(--slate-200)",
+                    color: "var(--slate-600)",
+                    borderRadius: "var(--radius-badge)",
+                  }}
+                  className="absolute bottom-3 right-3 px-2 py-0.5 text-[10px] font-semibold"
+                >
+                  Ilustrasi Placeholder Kategori
+                </span>
+              ) : (
+                <span
+                  style={{
+                    backgroundColor: "var(--secondary-100)",
+                    color: "var(--secondary-700)",
+                    borderRadius: "var(--radius-badge)",
+                  }}
+                  className="absolute bottom-3 right-3 px-2 py-0.5 text-[10px] font-bold"
+                >
+                  Foto Unit Asli Garasi Medan
+                </span>
+              )}
             </div>
 
             <div className="space-y-4 p-6">
@@ -340,7 +362,7 @@ export function VehicleCheckoutView({
                   Masuk untuk Melanjutkan Pemesanan
                 </p>
                 <p style={{ color: "var(--slate-600)" }} className="text-xs">
-                  Gunakan akun Google Anda untuk mengunci jadwal sewa kendaraan dan memantau status pesanan.
+                  Gunakan akun Email/Password atau Google Sign-In Anda untuk mengunci jadwal sewa dan mendapatkan kode pembayaran QRIS.
                 </p>
                 <div className="flex justify-center pt-1">
                   <AuthControls user={null} variant="light" />
@@ -529,11 +551,11 @@ export function VehicleCheckoutView({
                     htmlFor="checkout-payment-method"
                     className="block text-xs font-bold"
                   >
-                    <CreditCard
+                    <QrCode
                       className="mr-1 inline h-3.5 w-3.5"
                       aria-hidden="true"
                     />
-                    Metode Pembayaran
+                    Metode Pembayaran (Midtrans Sandbox QRIS)
                   </label>
                   <select
                     id="checkout-payment-method"
@@ -542,12 +564,17 @@ export function VehicleCheckoutView({
                     onChange={(e) =>
                       setPaymentMethod(e.target.value as PaymentMethod)
                     }
-                    style={{ borderRadius: "var(--radius-control)" }}
-                    className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm"
+                    style={{
+                      backgroundColor: "var(--secondary-50)",
+                      borderColor: "var(--secondary-600)",
+                      color: "var(--navy-900)",
+                      borderRadius: "var(--radius-control)",
+                    }}
+                    className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm font-bold"
                   >
-                    <option value="transfer">Transfer Bank (BCA / Mandiri)</option>
-                    <option value="qris">QRIS RentGo Medan</option>
-                    <option value="cash">Tunai di Kantor RentGo Medan</option>
+                    <option value="qris">
+                      QRIS Midtrans Sandbox (Merchant: rentgo-test) - Instan
+                    </option>
                   </select>
                 </div>
 
@@ -595,7 +622,7 @@ export function VehicleCheckoutView({
                   </div>
                   <div className="flex justify-between border-t pt-2 text-sm font-extrabold">
                     <span style={{ color: "var(--navy-900)" }}>
-                      Total Pembayaran
+                      Total Pembayaran QRIS
                     </span>
                     <span
                       style={{ color: "var(--primary-600)" }}
@@ -607,31 +634,34 @@ export function VehicleCheckoutView({
                   </div>
                 </div>
 
-                {/* Bank Instructions + 24-hour Deadline */}
+                {/* Midtrans Sandbox QRIS Notice */}
                 <div
                   style={{
-                    backgroundColor: "var(--info-bg)",
-                    color: "var(--info-text)",
+                    backgroundColor: "var(--secondary-50)",
+                    color: "var(--secondary-700)",
+                    borderColor: "var(--secondary-100)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="space-y-1.5 p-3.5 text-xs"
+                  className="space-y-1.5 border p-3.5 text-xs"
                 >
                   <p className="flex items-center gap-1.5 font-bold">
                     <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                    <span>Rekening Resmi Pembayaran:</span>
+                    <span>Gateway Pembayaran: Midtrans Sandbox QRIS</span>
                   </p>
-                  <p className="font-mono font-semibold">{bankInfo}</p>
+                  <p className="font-mono text-[11px] font-semibold">
+                    Merchant ID: rentgo-test • Mode: QRIS Sandbox
+                  </p>
                   <p className="flex items-center gap-1.5 pt-1 text-[11px]">
-                    <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span>
-                      Batas waktu unggah bukti bayar: 24 jam sejak pesanan dibuat (otomatis expired jika lewat).
+                      Setelah klik Buat Pesanan, kode QRIS dan tombol &ldquo;Sudah Bayar&rdquo; akan langsung tampil untuk simulasi pembayaran instan.
                     </span>
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={submitting || hasOverlapWithBlocked}
+                  disabled={submitting}
                   data-testid="submit-booking-button"
                   style={{
                     backgroundColor: "var(--primary-600)",
@@ -643,8 +673,8 @@ export function VehicleCheckoutView({
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                   <span>
                     {submitting
-                      ? "Mengunci Jadwal & Membuat Pesanan..."
-                      : "Konfirmasi & Buat Pesanan Sekarang"}
+                      ? "Mengunci Jadwal & Membuat QRIS..."
+                      : "Konfirmasi & Buat Pesanan QRIS"}
                   </span>
                 </button>
               </form>
