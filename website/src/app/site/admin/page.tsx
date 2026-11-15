@@ -626,7 +626,10 @@ export default async function AdminDashboardPage() {
                     {formatRupiah(b.total_price)}
                   </td>
                   <td className="px-4 py-3">
-                    <BookingStatusBadge status={b.status} />
+                    <BookingStatusBadge
+                      status={b.status}
+                      paymentStatus={b.payment?.status}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     {b.payment ? (

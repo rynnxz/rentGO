@@ -104,10 +104,11 @@ export default function StyleguidePage() {
           className="space-y-4 border p-6"
         >
           <div className="flex flex-wrap gap-2">
-            <BookingStatusBadge status="pending" />
-            <BookingStatusBadge status="confirmed" />
-            <BookingStatusBadge status="ongoing" />
-            <BookingStatusBadge status="completed" />
+            <BookingStatusBadge status="pending" paymentStatus="unpaid" />
+            <BookingStatusBadge status="pending" paymentStatus="paid" />
+            <BookingStatusBadge status="confirmed" paymentStatus="paid" />
+            <BookingStatusBadge status="ongoing" paymentStatus="paid" />
+            <BookingStatusBadge status="completed" paymentStatus="paid" />
             <BookingStatusBadge status="cancelled" />
             <BookingStatusBadge status="rejected" />
             <BookingStatusBadge status="expired" />

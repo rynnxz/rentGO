@@ -13,7 +13,11 @@ import {
   isDateRangeOverlapping,
   isVehicleAvailableForRange,
 } from "./availability";
-import { assertValidBookingTransition, type TransitionActor } from "./booking-state";
+import {
+  assertValidBookingTransition,
+  shouldExpireBooking,
+  type TransitionActor,
+} from "./booking-state";
 import { getTodayWib } from "./utils";
 import type {
   AiRecommendationLogRecord,
@@ -1626,17 +1630,21 @@ export async function runHousekeepingTasks(now: Date = new Date()): Promise<{
   activeVehiclesCount: number;
 }> {
   return withStoreTransaction((state) => {
-    const nowMs = now.getTime();
     const expiredBookingCodes: string[] = [];
 
     for (const booking of state.bookings) {
-      if (booking.status === "pending" && booking.expires_at) {
-        const expMs = Date.parse(booking.expires_at);
-        if (!Number.isNaN(expMs) && expMs <= nowMs) {
-          booking.status = "expired";
-          booking.updated_at = now.toISOString();
-          expiredBookingCodes.push(booking.booking_code);
-        }
+      const payment = state.payments.find((p) => p.booking_id === booking.id);
+      if (
+        shouldExpireBooking({
+          bookingStatus: booking.status,
+          paymentStatus: payment?.status ?? "unpaid",
+          expiresAt: booking.expires_at,
+          now,
+        })
+      ) {
+        booking.status = "expired";
+        booking.updated_at = now.toISOString();
+        expiredBookingCodes.push(booking.booking_code);
       }
     }
 

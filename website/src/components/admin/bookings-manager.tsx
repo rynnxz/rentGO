@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -12,7 +12,10 @@ import {
   X,
 } from "lucide-react";
 import { formatDateId, formatRupiah } from "@/lib/utils";
-import { getAllowedNextStatuses } from "@/lib/booking-state";
+import {
+  getAllowedNextStatuses,
+  getDisplayStatus,
+} from "@/lib/booking-state";
 import {
   BookingStatusBadge,
   PaymentStatusBadge,
@@ -55,10 +58,20 @@ export function BookingsManager({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  useEffect(() => {
+    setBookings(initialBookings);
+  }, [initialBookings]);
+
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
-      if (statusFilter !== "all" && b.status !== statusFilter) {
-        return false;
+      if (statusFilter !== "all") {
+        const display = getDisplayStatus(b.status, b.payment?.status);
+        if (
+          statusFilter !== b.status &&
+          statusFilter !== display.key
+        ) {
+          return false;
+        }
       }
       if (search.trim()) {
         const q = search.trim().toLowerCase();
@@ -107,6 +120,7 @@ export function BookingsManager({
       setFeedback(
         `Status pesanan ${booking.booking_code} berhasil diubah menjadi "${STATUS_ACTION_LABELS[nextStatus]}".`,
       );
+      router.refresh();
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Gagal memperbarui status.",
@@ -148,6 +162,7 @@ export function BookingsManager({
       setFeedback(
         `Status pembayaran pesanan ${booking.booking_code} diperbarui menjadi "${paymentStatus.toUpperCase()}".`,
       );
+      router.refresh();
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -264,8 +279,10 @@ export function BookingsManager({
             className="mt-1 min-h-[44px] w-full border px-3 py-2 text-sm"
           >
             <option value="all">Semua Status</option>
-            <option value="pending">Menunggu (Pending)</option>
-            <option value="confirmed">Dikonfirmasi (Confirmed)</option>
+            <option value="pending">Semua Pending</option>
+            <option value="pending_unpaid">Menunggu Pembayaran (Belum Bayar)</option>
+            <option value="pending_paid">Menunggu Konfirmasi Admin (Lunas)</option>
+            <option value="confirmed">Siap Diambil (Confirmed)</option>
             <option value="ongoing">Sedang Disewa (Ongoing)</option>
             <option value="completed">Selesai (Completed)</option>
             <option value="cancelled">Dibatalkan (Cancelled)</option>
@@ -397,7 +414,10 @@ export function BookingsManager({
                       </td>
                       <td className="whitespace-nowrap px-2.5 py-2.5">
                         <div className="flex flex-col items-start gap-1">
-                          <BookingStatusBadge status={b.status} />
+                          <BookingStatusBadge
+                            status={b.status}
+                            paymentStatus={b.payment?.status}
+                          />
                           {b.payment ? (
                             <PaymentStatusBadge status={b.payment.status} />
                           ) : null}
@@ -406,8 +426,10 @@ export function BookingsManager({
                       <td className="whitespace-nowrap px-2.5 py-2.5 text-right">
                         <div className="inline-flex items-center justify-end gap-1 whitespace-nowrap">
                           {b.payment &&
-                          (b.payment.status !== "paid" ||
-                            b.status === "pending") ? (
+                          b.payment.status !== "paid" &&
+                          b.status !== "cancelled" &&
+                          b.status !== "rejected" &&
+                          b.status !== "expired" ? (
                             <button
                               type="button"
                               disabled={loading}
@@ -427,11 +449,7 @@ export function BookingsManager({
                                 className="h-3 w-3 shrink-0"
                                 aria-hidden="true"
                               />
-                              <span>
-                                {b.payment.status === "paid"
-                                  ? "Verifikasi"
-                                  : "Set Lunas"}
-                              </span>
+                              <span>Set Lunas</span>
                             </button>
                           ) : null}
 
@@ -517,18 +535,21 @@ export function BookingsManager({
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    style={{
-                      backgroundColor: "var(--accent-500)",
-                      color: "var(--navy-900)",
-                      borderRadius: "var(--radius-badge)",
-                    }}
-                    className="px-2 py-0.5 text-[10px] font-extrabold uppercase"
-                  >
-                    Menu Aksi & Detail Pesanan
-                  </span>
-                  <BookingStatusBadge status={selected.status} />
-                </div>
+                    <span
+                      style={{
+                        backgroundColor: "var(--accent-500)",
+                        color: "var(--navy-900)",
+                        borderRadius: "var(--radius-badge)",
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-extrabold uppercase"
+                    >
+                      Menu Aksi & Detail Pesanan
+                    </span>
+                    <BookingStatusBadge
+                      status={selected.status}
+                      paymentStatus={selected.payment?.status}
+                    />
+                  </div>
                 <h2
                   id="booking-detail-dialog-title"
                   className="mt-1.5 font-mono text-lg font-extrabold"
@@ -581,7 +602,13 @@ export function BookingsManager({
                     style={{ color: "var(--slate-600)" }}
                     className="text-[11px] font-semibold"
                   >
-                    Status Saat Ini: {STATUS_ACTION_LABELS[selected.status]}
+                    Status Saat Ini:{" "}
+                    {
+                      getDisplayStatus(
+                        selected.status,
+                        selected.payment?.status,
+                      ).label
+                    }
                   </span>
                 </div>
 

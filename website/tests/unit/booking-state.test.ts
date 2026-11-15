@@ -3,6 +3,8 @@ import {
   assertValidBookingTransition,
   canTransitionBookingStatus,
   getAllowedNextStatuses,
+  getDisplayStatus,
+  shouldExpireBooking,
 } from "@/lib/booking-state";
 
 describe("Booking Status State Machine (Section 8.2)", () => {
@@ -51,5 +53,135 @@ describe("Booking Status State Machine (Section 8.2)", () => {
       "ongoing",
       "cancelled",
     ]);
+  });
+});
+
+describe("getDisplayStatus(bookingStatus, paymentStatus) Pure Helper", () => {
+  it("maps pending + unpaid to 'Menunggu Pembayaran' (amber)", () => {
+    const res = getDisplayStatus("pending", "unpaid");
+    expect(res.key).toBe("pending_unpaid");
+    expect(res.label).toBe("Menunggu Pembayaran");
+    expect(res.variant).toBe("amber");
+
+    const fallbackNull = getDisplayStatus("pending", null);
+    expect(fallbackNull.label).toBe("Menunggu Pembayaran");
+    expect(fallbackNull.variant).toBe("amber");
+  });
+
+  it("maps pending + paid to 'Menunggu Konfirmasi Admin' (blue)", () => {
+    const res = getDisplayStatus("pending", "paid");
+    expect(res.key).toBe("pending_paid");
+    expect(res.label).toBe("Menunggu Konfirmasi Admin");
+    expect(res.variant).toBe("blue");
+  });
+
+  it("maps confirmed + paid to 'Siap Diambil' / 'Menunggu Unit' (teal)", () => {
+    const res = getDisplayStatus("confirmed", "paid");
+    expect(res.key).toBe("confirmed_paid");
+    expect(res.label).toBe("Siap Diambil");
+    expect(res.secondaryLabel).toBe("Menunggu Unit");
+    expect(res.variant).toBe("teal");
+  });
+
+  it("maps confirmed + unpaid to 'Menunggu Pembayaran' (amber)", () => {
+    const res = getDisplayStatus("confirmed", "unpaid");
+    expect(res.key).toBe("confirmed_unpaid");
+    expect(res.label).toBe("Menunggu Pembayaran");
+    expect(res.variant).toBe("amber");
+  });
+
+  it("maps ongoing to 'Sedang Disewa' (teal)", () => {
+    expect(getDisplayStatus("ongoing", "paid")).toMatchObject({
+      key: "ongoing",
+      label: "Sedang Disewa",
+      variant: "teal",
+    });
+    expect(getDisplayStatus("ongoing", "unpaid").label).toBe("Sedang Disewa");
+  });
+
+  it("maps completed to 'Selesai' (emerald)", () => {
+    expect(getDisplayStatus("completed", "paid")).toMatchObject({
+      key: "completed",
+      label: "Selesai",
+      variant: "emerald",
+    });
+  });
+
+  it("maps cancelled, rejected, and expired to their respective labels and variants", () => {
+    expect(getDisplayStatus("cancelled", "unpaid")).toMatchObject({
+      key: "cancelled",
+      label: "Dibatalkan",
+      variant: "slate",
+    });
+    expect(getDisplayStatus("cancelled", "refunded").label).toBe("Dibatalkan");
+
+    expect(getDisplayStatus("rejected", "unpaid")).toMatchObject({
+      key: "rejected",
+      label: "Ditolak Admin",
+      variant: "red",
+    });
+
+    expect(getDisplayStatus("expired", "unpaid")).toMatchObject({
+      key: "expired",
+      label: "Kedaluwarsa",
+      variant: "slate",
+    });
+  });
+});
+
+describe("shouldExpireBooking 24-Hour Cron Rule", () => {
+  const now = new Date("2026-11-17T02:00:00.000Z");
+  const pastExpiry = "2026-11-16T01:00:00.000Z";
+  const futureExpiry = "2026-11-18T01:00:00.000Z";
+
+  it("expires only pending + unpaid bookings past expires_at", () => {
+    expect(
+      shouldExpireBooking({
+        bookingStatus: "pending",
+        paymentStatus: "unpaid",
+        expiresAt: pastExpiry,
+        now,
+      }),
+    ).toBe(true);
+  });
+
+  it("never expires pending bookings that are already paid or refunded", () => {
+    expect(
+      shouldExpireBooking({
+        bookingStatus: "pending",
+        paymentStatus: "paid",
+        expiresAt: pastExpiry,
+        now,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldExpireBooking({
+        bookingStatus: "pending",
+        paymentStatus: "refunded",
+        expiresAt: pastExpiry,
+        now,
+      }),
+    ).toBe(false);
+  });
+
+  it("does not expire bookings before expires_at or non-pending bookings", () => {
+    expect(
+      shouldExpireBooking({
+        bookingStatus: "pending",
+        paymentStatus: "unpaid",
+        expiresAt: futureExpiry,
+        now,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldExpireBooking({
+        bookingStatus: "confirmed",
+        paymentStatus: "unpaid",
+        expiresAt: pastExpiry,
+        now,
+      }),
+    ).toBe(false);
   });
 });

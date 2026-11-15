@@ -131,7 +131,10 @@ export default async function CustomerBookingsListPage() {
                     >
                       {b.booking_code}
                     </span>
-                    <BookingStatusBadge status={b.status} />
+                    <BookingStatusBadge
+                      status={b.status}
+                      paymentStatus={b.payment?.status}
+                    />
                     {b.payment ? (
                       <PaymentStatusBadge status={b.payment.status} />
                     ) : null}

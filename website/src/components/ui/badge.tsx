@@ -5,56 +5,66 @@ import type {
   PaymentStatus,
   VehicleStatus,
 } from "@/lib/types";
-import { BOOKING_STATUS_LABELS } from "@/lib/booking-state";
+import {
+  getDisplayStatus,
+  type DisplayStatusVariant,
+} from "@/lib/booking-state";
 
-export function BookingStatusBadge({ status }: { status: BookingStatus }) {
-  const styles: Record<BookingStatus, React.CSSProperties> = {
-    pending: {
-      backgroundColor: "var(--accent-50)",
+export function BookingStatusBadge({
+  status,
+  paymentStatus,
+}: {
+  status: BookingStatus;
+  paymentStatus?: PaymentStatus | null;
+}) {
+  const display = getDisplayStatus(status, paymentStatus);
+
+  const variantStyles: Record<DisplayStatusVariant, React.CSSProperties> = {
+    amber: {
+      backgroundColor: "var(--warning-bg)",
       color: "var(--warning-text)",
-      borderColor: "var(--accent-500)",
+      borderColor: "var(--warning)",
     },
-    confirmed: {
+    blue: {
       backgroundColor: "var(--primary-100)",
       color: "var(--primary-700)",
       borderColor: "var(--primary-600)",
     },
-    ongoing: {
+    teal: {
       backgroundColor: "var(--info-bg)",
       color: "var(--info-text)",
       borderColor: "var(--info)",
     },
-    completed: {
+    emerald: {
       backgroundColor: "var(--success-bg)",
       color: "var(--success-text)",
       borderColor: "var(--success)",
     },
-    cancelled: {
+    slate: {
       backgroundColor: "var(--slate-100)",
       color: "var(--slate-600)",
-      borderColor: "var(--slate-200)",
+      borderColor: "var(--slate-400)",
     },
-    rejected: {
+    red: {
       backgroundColor: "var(--danger-bg)",
       color: "var(--danger-text)",
       borderColor: "var(--danger)",
-    },
-    expired: {
-      backgroundColor: "var(--slate-200)",
-      color: "var(--slate-900)",
-      borderColor: "var(--slate-400)",
     },
   };
 
   return (
     <span
+      data-testid="booking-status-badge"
+      data-status-key={display.key}
+      data-status-variant={display.variant}
       style={{
-        ...styles[status],
+        ...variantStyles[display.variant],
         borderRadius: "var(--radius-badge)",
       }}
       className="inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs font-semibold tracking-tight"
+      title={display.description}
     >
-      {BOOKING_STATUS_LABELS[status]}
+      {display.label}
     </span>
   );
 }

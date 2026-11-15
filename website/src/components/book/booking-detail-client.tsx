@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
   formatDateId,
   formatRupiah,
 } from "@/lib/utils";
+import { getDisplayStatus } from "@/lib/booking-state";
 import {
   BookingStatusBadge,
   PaymentStatusBadge,
@@ -85,6 +86,10 @@ export function BookingDetailClient({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  useEffect(() => {
+    setBooking(initialBooking);
+  }, [initialBooking]);
+
   const qrMatrix = useMemo(
     () =>
       buildQrisMatrix(
@@ -93,7 +98,10 @@ export function BookingDetailClient({
     [booking.booking_code, booking.total_price],
   );
 
-  const isPaid = booking.payment?.status === "paid";
+  const paymentStatus = booking.payment?.status ?? "unpaid";
+  const isPaid = paymentStatus === "paid";
+  const isUnpaid = paymentStatus === "unpaid";
+  const displayStatus = getDisplayStatus(booking.status, paymentStatus);
 
   const whatsappUrl = buildWhatsAppBookingUrl({
     whatsappNumber,
@@ -283,13 +291,24 @@ export function BookingDetailClient({
                 {booking.booking_code}
               </h1>
             </div>
-            <div className="flex items-center gap-2">
-              <BookingStatusBadge status={booking.status} />
+            <div className="flex flex-wrap items-center gap-2">
+              <BookingStatusBadge
+                status={booking.status}
+                paymentStatus={paymentStatus}
+              />
               {booking.payment ? (
                 <PaymentStatusBadge status={booking.payment.status} />
               ) : null}
             </div>
           </div>
+
+          <p
+            style={{ color: "var(--slate-600)" }}
+            className="text-xs font-medium"
+            data-testid="booking-status-description"
+          >
+            {displayStatus.description}
+          </p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <img
@@ -577,20 +596,19 @@ export function BookingDetailClient({
             </div>
           </div>
 
-          {booking.status !== "cancelled" &&
+          {isUnpaid &&
+          booking.status !== "cancelled" &&
           booking.status !== "rejected" &&
           booking.status !== "expired" ? (
             <div className="space-y-3">
-              {/* Primary Sandbox "Sudah Bayar" Action Button */}
+              {/* Primary Sandbox "Sudah Bayar" Action Button — only shown when payment is unpaid */}
               <button
                 type="button"
                 disabled={uploading}
                 onClick={handleSimulateQrisPaid}
                 data-testid="simulate-upload-proof-button"
                 style={{
-                  backgroundColor: isPaid
-                    ? "var(--secondary-700)"
-                    : "var(--primary-600)",
+                  backgroundColor: "var(--primary-600)",
                   color: "var(--surface-white)",
                   borderRadius: "var(--radius-control)",
                 }}
@@ -600,9 +618,7 @@ export function BookingDetailClient({
                 <span>
                   {uploading
                     ? "Memverifikasi Midtrans Sandbox..."
-                    : isPaid
-                      ? "Sudah Bayar (Terkonfirmasi Lunas di Sandbox)"
-                      : "Sudah Bayar (Simulasi QRIS Midtrans Sandbox)"}
+                    : "Sudah Bayar (Simulasi QRIS Midtrans Sandbox)"}
                 </span>
               </button>
 
@@ -627,6 +643,23 @@ export function BookingDetailClient({
                   className="sr-only"
                 />
               </label>
+            </div>
+          ) : isPaid ? (
+            <div
+              data-testid="paid-status-callout"
+              style={{
+                backgroundColor: "var(--success-bg)",
+                color: "var(--success-text)",
+                borderColor: "var(--success)",
+                borderRadius: "var(--radius-control)",
+              }}
+              className="flex items-center gap-2.5 border p-3.5 text-xs font-semibold"
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                Pembayaran QRIS Lunas • Status pesanan:{" "}
+                <strong>{displayStatus.label}</strong>
+              </span>
             </div>
           ) : null}
 

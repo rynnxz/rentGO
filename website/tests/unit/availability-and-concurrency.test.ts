@@ -4,10 +4,13 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import {
   createBooking,
   createMaintenanceLog,
+  getBookingById,
   listVehicles,
   resetDatabaseToSeed,
+  runHousekeepingTasks,
   setLocalStoreFilePathForTests,
   softDeleteVehicle,
+  updateBookingPayment,
 } from "@/lib/repository";
 import { isDateRangeOverlapping } from "@/lib/availability";
 
@@ -121,5 +124,42 @@ describe("Availability Overlap, Maintenance Blocking, & Concurrency Anti-Double-
     await expect(
       softDeleteVehicle("33333333-3333-4333-8333-333333333301"),
     ).rejects.toThrow(/masih memiliki booking aktif/);
+  });
+
+  it("CRON HOUSEKEEPING: expires only pending + unpaid bookings past 24 hours, preserving pending + paid bookings", async () => {
+    // Seed booking 44444444-4444-4444-8444-444444444404 is pending + unpaid with expires_at 2026-11-16T01:00:00.000Z
+    // Create a second pending booking and mark its payment as paid
+    const paidPendingBooking = await createBooking({
+      user_id: "22222222-2222-4222-8222-222222222202",
+      vehicle_id: "33333333-3333-4333-8333-333333333302",
+      start_date: "2026-12-18",
+      end_date: "2026-12-19",
+      pickup_location: "Bandara Kualanamu",
+      return_location: "Bandara Kualanamu",
+      payment_method: "qris",
+    });
+
+    await updateBookingPayment({
+      bookingId: paidPendingBooking.id,
+      actorUserId: "22222222-2222-4222-8222-222222222202",
+      actorRole: "customer",
+      status: "paid",
+      method: "qris",
+    });
+
+    // Run cron far in the future (48 hours after both bookings' expires_at)
+    const futureNow = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    const result = await runHousekeepingTasks(futureNow);
+
+    // Unpaid seed booking RG-261115-D404 must be expired
+    expect(result.expiredBookingCodes).toContain("RG-261115-D404");
+    // Paid pending booking must NOT be expired
+    expect(result.expiredBookingCodes).not.toContain(
+      paidPendingBooking.booking_code,
+    );
+
+    const refreshedPaidBooking = await getBookingById(paidPendingBooking.id);
+    expect(refreshedPaidBooking?.status).toBe("pending");
+    expect(refreshedPaidBooking?.payment?.status).toBe("paid");
   });
 });

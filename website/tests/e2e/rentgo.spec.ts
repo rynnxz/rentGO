@@ -89,15 +89,31 @@ test.describe("RentGo Medan E2E Verification Suite", () => {
     ).trim();
     expect(bookingCode).toMatch(/^RG-\d{6}-[A-Z0-9]{4}$/);
 
-    // 5. Upload sample payment proof
+    // Verify initial status is pending + unpaid => "Menunggu Pembayaran"
+    await expect(page.getByTestId("booking-status-badge")).toContainText(
+      "Menunggu Pembayaran",
+    );
+    await expect(
+      page.getByTestId("simulate-upload-proof-button"),
+    ).toBeVisible();
+
+    // 5. Simulate QRIS paid -> UI immediately revalidates without reload, button disappears, badge shows "Menunggu Konfirmasi Admin"
     await page.getByTestId("simulate-upload-proof-button").click();
     await expect(page.getByTestId("booking-detail-feedback")).toBeVisible();
+    await expect(page.getByTestId("booking-status-badge")).toContainText(
+      "Menunggu Konfirmasi Admin",
+    );
+    await expect(page.getByTestId("simulate-upload-proof-button")).toHaveCount(
+      0,
+    );
+    await expect(page.getByTestId("paid-status-callout")).toBeVisible();
 
-    // 6. Verify it appears in "Pesanan Saya"
+    // 6. Verify it appears in "Pesanan Saya" with "Menunggu Konfirmasi Admin" & "Lunas"
     await page.goto("/bookings?site=book");
-    await expect(
-      page.getByTestId(`my-booking-card-${bookingCode}`),
-    ).toBeVisible();
+    const myCard = page.getByTestId(`my-booking-card-${bookingCode}`);
+    await expect(myCard).toBeVisible();
+    await expect(myCard).toContainText("Menunggu Konfirmasi Admin");
+    await expect(myCard).toContainText("Lunas");
 
     // 7. Logout customer & login as Admin to process state machine transitions
     await page.getByTestId("logout-button").click();
@@ -111,30 +127,29 @@ test.describe("RentGo Medan E2E Verification Suite", () => {
     await expect(page.getByTestId("admin-bookings-view")).toBeVisible();
     const row = page.getByTestId(`booking-row-${bookingCode}`);
     await expect(row).toBeVisible();
+    await expect(row).toContainText("Menunggu Konfirmasi Admin");
+    await expect(row).toContainText("Lunas");
 
-    // Verify payment as Paid
-    await page.getByTestId(`verify-paid-${bookingCode}`).click();
-    await expect(page.getByTestId("booking-feedback-banner")).toContainText(
-      "PAID",
-    );
-
-    // Transition: pending -> confirmed
+    // Transition: pending -> confirmed ("Siap Diambil")
     await page.getByTestId(`transition-${bookingCode}-confirmed`).click();
     await expect(page.getByTestId("booking-feedback-banner")).toContainText(
       "Konfirmasi",
     );
+    await expect(row).toContainText("Siap Diambil");
 
-    // Transition: confirmed -> ongoing
+    // Transition: confirmed -> ongoing ("Sedang Disewa")
     await page.getByTestId(`transition-${bookingCode}-ongoing`).click();
     await expect(page.getByTestId("booking-feedback-banner")).toContainText(
       "Ongoing",
     );
+    await expect(row).toContainText("Sedang Disewa");
 
-    // Transition: ongoing -> completed
+    // Transition: ongoing -> completed ("Selesai")
     await page.getByTestId(`transition-${bookingCode}-completed`).click();
     await expect(page.getByTestId("booking-feedback-banner")).toContainText(
       "Selesaikan Sewa",
     );
+    await expect(row).toContainText("Selesai");
   });
 
   test("E2E-05: Customer cancels a pending booking and vehicle becomes available again for those dates", async ({
