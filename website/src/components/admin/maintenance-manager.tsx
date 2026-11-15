@@ -218,7 +218,7 @@ export function MaintenanceManager({
           aria-label="Tabel Jadwal Perawatan Armada"
           tabIndex={0}
         >
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -256,6 +256,7 @@ export function MaintenanceManager({
                   <tr key={log.id} data-testid={`maint-row-${log.vehicle_plate}`}>
                     <th
                       scope="row"
+                      data-label="Unit Kendaraan"
                       style={{
                         backgroundColor: "var(--surface-white)",
                         color: "var(--navy-900)",
@@ -272,7 +273,7 @@ export function MaintenanceManager({
                         {log.vehicle_plate}
                       </p>
                     </th>
-                    <td className="max-w-xs px-4 py-3">
+                    <td data-label="Pekerjaan Servis" className="max-w-xs px-4 py-3">
                       <p
                         style={{ color: "var(--navy-900)" }}
                         className="font-semibold"
@@ -286,17 +287,17 @@ export function MaintenanceManager({
                         {log.description || "-"}
                       </p>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs tabular-nums">
+                    <td data-label="Rentang Tanggal" className="whitespace-nowrap px-4 py-3 text-xs tabular-nums">
                       {formatDateId(log.start_date)} -{" "}
                       {formatDateId(log.end_date)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
+                    <td data-label="Biaya" className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
                       {formatRupiah(log.cost)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3">
+                    <td data-label="Status" className="whitespace-nowrap px-4 py-3">
                       <MaintenanceStatusBadge status={log.status} />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <td data-label="Aksi" className="whitespace-nowrap px-4 py-3 text-right">
                       <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
                         {log.status === "scheduled" ? (
                           <button

@@ -13,11 +13,11 @@ import {
   ShieldAlert,
   Users,
   Wrench,
-  X,
 } from "lucide-react";
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { MobileDrawer } from "@/components/shared/mobile-drawer";
 import type { UserRecord } from "@/lib/types";
 
 const NAV_ITEMS = [
@@ -72,6 +72,15 @@ export function AdminShell({
 }) {
   const pathname = usePathname() || "/";
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  function checkIsActive(href: string) {
+    const subRoute = href.slice("/admin".length);
+    return href === "/admin"
+      ? pathname === "/" || pathname === "/admin" || pathname === "/site/admin"
+      : pathname.startsWith(href) ||
+          Boolean(subRoute && pathname.startsWith(subRoute)) ||
+          pathname.startsWith(`/site${href}`);
+  }
 
   // RBAC Guard for Admin Surface (Unauthenticated)
   if (!user) {
@@ -242,13 +251,13 @@ export function AdminShell({
       style={{ backgroundColor: "var(--slate-50)" }}
       className="flex min-h-screen flex-col lg:flex-row"
     >
-      {/* Desktop Sticky Sidebar (Locked to viewport height, never scrolls away) */}
+      {/* Desktop Sticky Sidebar (>= lg) */}
       <aside
         style={{
           backgroundColor: "var(--brand-navy-deep)",
           color: "var(--on-dark-fg)",
         }}
-        className="hidden w-68 shrink-0 flex-col justify-between border-r p-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto"
+        className="hidden w-72 shrink-0 flex-col justify-between border-r p-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto"
       >
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2">
@@ -260,15 +269,7 @@ export function AdminShell({
           <nav aria-label="Navigasi Administrator" className="space-y-1.5">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const subRoute = item.href.slice("/admin".length);
-              const isActive =
-                item.href === "/admin"
-                  ? pathname === "/" ||
-                    pathname === "/admin" ||
-                    pathname === "/site/admin"
-                  : pathname.startsWith(item.href) ||
-                    (subRoute && pathname.startsWith(subRoute)) ||
-                    pathname.startsWith(`/site${item.href}`);
+              const isActive = checkIsActive(item.href);
 
               return (
                 <Link
@@ -290,13 +291,11 @@ export function AdminShell({
                   <Icon
                     className="h-4 w-4 shrink-0"
                     style={{
-                      color: isActive
-                        ? "var(--accent-500)"
-                        : "#CCFBF1",
+                      color: isActive ? "var(--accent-500)" : "#CCFBF1",
                     }}
                     aria-hidden="true"
                   />
-                  <span className="truncate">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -341,32 +340,11 @@ export function AdminShell({
 
       {/* Main Content Area + Sticky Top Navbar */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header
-          style={{ backgroundColor: "var(--surface-white)" }}
-          className="sticky top-0 z-40 border-b shadow-xs"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <header className="sticky-glass-header sticky top-0 z-40 shadow-[var(--shadow-xs)]">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
-              {/* Mobile Logo & Drawer Button */}
+              {/* Mobile Logo (< lg) */}
               <div className="flex items-center gap-2.5 lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => setMobileDrawerOpen((prev) => !prev)}
-                  aria-expanded={mobileDrawerOpen}
-                  aria-label="Toggle Menu Navigasi Admin"
-                  style={{
-                    backgroundColor: "var(--brand-navy-deep)",
-                    color: "var(--on-dark-fg)",
-                    borderRadius: "var(--radius-control)",
-                  }}
-                  className="inline-flex h-10 w-10 items-center justify-center"
-                >
-                  {mobileDrawerOpen ? (
-                    <X className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <Menu className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </button>
                 <Link href="/admin" className="inline-flex items-center">
                   <RentGoLogo surfaceLabel="Admin" variant="light" />
                 </Link>
@@ -384,111 +362,101 @@ export function AdminShell({
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <AuthControls user={user} variant="light" />
+              <div className="hidden sm:block">
+                <AuthControls user={user} variant="light" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(true)}
+                data-testid="mobile-hamburger-button"
+                aria-expanded={mobileDrawerOpen}
+                aria-label="Toggle Menu Navigasi Admin"
+                style={{
+                  backgroundColor: "var(--brand-navy-deep)",
+                  color: "var(--on-dark-fg)",
+                  borderRadius: "var(--radius-control)",
+                }}
+                className="inline-flex h-10 w-10 items-center justify-center lg:hidden"
+              >
+                <Menu className="h-5 w-5" aria-hidden="true" />
+              </button>
             </div>
           </div>
 
-          {/* Mobile Horizontal Quick-Nav Bar (Always accessible on phones/tablets) */}
-          <nav
-            aria-label="Navigasi Cepat Seluler"
-            style={{ backgroundColor: "var(--slate-50)" }}
-            className="flex items-center gap-1.5 overflow-x-auto border-t px-4 py-2 lg:hidden"
+          {/* Mobile Slide-in Sidebar Drawer (< lg) */}
+          <MobileDrawer
+            open={mobileDrawerOpen}
+            onClose={() => setMobileDrawerOpen(false)}
+            titleLabel="Menu Navigasi Administrator"
+            surfaceLabel="Admin Panel"
+            footer={
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <a
+                    href={bookSurfaceUrl}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    style={{
+                      backgroundColor: "var(--bg-subtle)",
+                      color: "var(--fg)",
+                      borderRadius: "var(--radius-control)",
+                    }}
+                    className="inline-flex min-h-[40px] items-center justify-between border px-3 py-2 font-bold"
+                  >
+                    <span>Katalog Booking</span>
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                  <a
+                    href={landingSurfaceUrl}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    style={{
+                      backgroundColor: "var(--bg-subtle)",
+                      color: "var(--fg)",
+                      borderRadius: "var(--radius-control)",
+                    }}
+                    className="inline-flex min-h-[40px] items-center justify-between border px-3 py-2 font-bold"
+                  >
+                    <span>Beranda Publik</span>
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                  <AuthControls user={user} variant="light" />
+                </div>
+              </div>
+            }
           >
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const subRoute = item.href.slice("/admin".length);
-              const isActive =
-                item.href === "/admin"
-                  ? pathname === "/" ||
-                    pathname === "/admin" ||
-                    pathname === "/site/admin"
-                  : pathname.startsWith(item.href) ||
-                    (subRoute && pathname.startsWith(subRoute)) ||
-                    pathname.startsWith(`/site${item.href}`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileDrawerOpen(false)}
-                  style={{
-                    backgroundColor: isActive
-                      ? "var(--primary-600)"
-                      : "var(--surface-white)",
-                    color: isActive
-                      ? "var(--surface-white)"
-                      : "var(--navy-900)",
-                    borderColor: isActive
-                      ? "var(--primary-600)"
-                      : "var(--slate-200)",
-                    borderRadius: "var(--radius-control)",
-                  }}
-                  className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 border px-3 py-1.5 text-xs font-bold shadow-2xs"
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+            <nav aria-label="Menu Navigasi Admin Seluler" className="space-y-1.5">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = checkIsActive(item.href);
 
-          {/* Collapsible Mobile Drawer Panel */}
-          {mobileDrawerOpen ? (
-            <div
-              style={{
-                backgroundColor: "var(--brand-navy-deep)",
-                color: "var(--on-dark-fg)",
-              }}
-              className="border-t p-4 lg:hidden"
-            >
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                {NAV_ITEMS.map((item) => {
-                  const Icon = item.icon;
-                  const isActive =
-                    item.href === "/"
-                      ? pathname === "/" || pathname === "/site/admin"
-                      : pathname.startsWith(item.href) ||
-                        pathname.startsWith(`/site/admin${item.href}`);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileDrawerOpen(false)}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    style={{
+                      backgroundColor: isActive
+                        ? "var(--primary-600)"
+                        : "transparent",
+                      color: isActive ? "var(--primary-fg)" : "var(--fg)",
+                      borderRadius: "var(--radius-control)",
+                    }}
+                    className="flex min-h-[44px] items-center gap-3 px-3.5 py-2.5 text-sm font-bold transition-colors hover:bg-[var(--bg-subtle)]"
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0"
                       style={{
-                        backgroundColor: isActive
-                          ? "var(--primary-600)"
-                          : "rgb(255 255 255 / 0.06)",
-                        borderRadius: "var(--radius-control)",
+                        color: isActive ? "var(--accent-500)" : "var(--primary)",
                       }}
-                      className="flex min-h-[42px] items-center gap-2.5 px-3 py-2 text-xs font-bold"
-                    >
-                      <Icon
-                        className="h-4 w-4 shrink-0"
-                        style={{ color: "var(--accent-500)" }}
-                        aria-hidden="true"
-                      />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 border-t border-white/15 pt-3 text-xs">
-                <a
-                  href={bookSurfaceUrl}
-                  className="inline-flex items-center gap-1 font-semibold underline"
-                >
-                  <span>Buka Katalog Booking</span>
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                </a>
-                <a
-                  href={landingSurfaceUrl}
-                  className="inline-flex items-center gap-1 font-semibold underline"
-                >
-                  <span>Beranda Publik</span>
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
-          ) : null}
+                      aria-hidden="true"
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </MobileDrawer>
         </header>
 
         <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8">

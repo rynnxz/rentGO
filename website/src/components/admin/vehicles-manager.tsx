@@ -409,7 +409,7 @@ export function VehiclesManager({
           aria-label="Tabel Data Kendaraan"
           tabIndex={0}
         >
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -448,6 +448,7 @@ export function VehiclesManager({
                   <tr key={v.id} data-testid={`vehicle-row-${v.plate_number}`}>
                     <th
                       scope="row"
+                      data-label="Unit Kendaraan"
                       style={{
                         backgroundColor: "var(--surface-white)",
                         color: "var(--navy-900)",
@@ -475,26 +476,27 @@ export function VehiclesManager({
                         </div>
                       </div>
                     </th>
-                    <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs font-bold">
+                    <td data-label="Plat Nomor" className="whitespace-nowrap px-3 py-2.5 font-mono text-xs font-bold">
                       {v.plate_number}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-xs font-semibold">
+                    <td data-label="Kategori" className="whitespace-nowrap px-3 py-2.5 text-xs font-semibold">
                       {v.category_name}
                     </td>
                     <td
+                      data-label="Spesifikasi"
                       style={{ color: "var(--slate-600)" }}
                       className="px-3 py-2.5 text-xs"
                     >
                       {v.transmission === "automatic" ? "Otomatis" : "Manual"} -{" "}
                       {v.seats} Kursi - {v.fuel.toUpperCase()}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums">
+                    <td data-label="Tarif / Hari" className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums">
                       {formatRupiah(v.daily_price)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5">
+                    <td data-label="Status" className="whitespace-nowrap px-3 py-2.5">
                       <VehicleStatusBadge status={v.status} />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-right">
+                    <td data-label="Aksi" className="whitespace-nowrap px-3 py-2.5 text-right">
                       <div className="inline-flex items-center justify-end gap-1.5">
                         <button
                           type="button"

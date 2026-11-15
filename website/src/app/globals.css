@@ -125,6 +125,72 @@
   background-color: var(--bg-subtle);
 }
 
+/* Mobile Stacked Card Layout for Admin & Data Tables (< 768px) */
+@media (max-width: 767px) {
+  .responsive-stack-table,
+  .responsive-stack-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .responsive-stack-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .responsive-stack-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
+    margin: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-elevated);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .responsive-stack-table tbody th[scope="row"],
+  .responsive-stack-table tbody td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    text-align: left !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100%;
+    padding: 0 !important;
+    position: static !important;
+    white-space: normal !important;
+    border: 0 !important;
+    background-color: transparent !important;
+  }
+
+  .responsive-stack-table tbody td[data-label]::before,
+  .responsive-stack-table tbody th[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--fg-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .responsive-stack-table tbody td > div.inline-flex {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
 /* Leaflet custom pin reset */
 .rentgo-leaflet-pin-wrapper,
 .rentgo-leaflet-user-pin {

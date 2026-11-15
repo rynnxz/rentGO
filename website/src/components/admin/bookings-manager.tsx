@@ -307,7 +307,7 @@ export function BookingsManager({
           aria-label="Tabel Pesanan Sewa Kendaraan"
           tabIndex={0}
         >
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -364,6 +364,7 @@ export function BookingsManager({
                     >
                       <th
                         scope="row"
+                        data-label="Pesanan & Penyewa"
                         style={{
                           backgroundColor: "var(--surface-white)",
                           color: "var(--navy-900)",
@@ -383,10 +384,10 @@ export function BookingsManager({
                           {b.user_phone || b.user_email}
                         </p>
                       </th>
-                      <td className="max-w-[150px] px-2.5 py-2.5">
+                      <td data-label="Kendaraan" className="max-w-[165px] px-2.5 py-2.5">
                         <p
                           style={{ color: "var(--navy-900)" }}
-                          className="truncate font-semibold leading-snug"
+                          className="font-semibold leading-snug"
                         >
                           {b.vehicle_brand} {b.vehicle_model}
                         </p>
@@ -397,22 +398,19 @@ export function BookingsManager({
                           {b.vehicle_plate}
                         </p>
                       </td>
-                      <td className="max-w-[165px] px-2.5 py-2.5 text-xs tabular-nums">
+                      <td data-label="Tanggal & Lokasi" className="max-w-[175px] px-2.5 py-2.5 text-xs tabular-nums">
                         <p className="font-semibold leading-snug">
                           {formatDateId(b.start_date)} -{" "}
                           {formatDateId(b.end_date)} ({b.total_days} hr)
                         </p>
-                        <p
-                          style={{ color: "var(--slate-600)" }}
-                          className="truncate"
-                        >
+                        <p style={{ color: "var(--slate-600)" }}>
                           {b.pickup_location}
                         </p>
                       </td>
-                      <td className="whitespace-nowrap px-2.5 py-2.5 text-right font-bold tabular-nums">
+                      <td data-label="Tagihan" className="whitespace-nowrap px-2.5 py-2.5 text-right font-bold tabular-nums">
                         {formatRupiah(b.total_price)}
                       </td>
-                      <td className="whitespace-nowrap px-2.5 py-2.5">
+                      <td data-label="Status" className="whitespace-nowrap px-2.5 py-2.5">
                         <div className="flex flex-col items-start gap-1">
                           <BookingStatusBadge
                             status={b.status}
@@ -423,7 +421,7 @@ export function BookingsManager({
                           ) : null}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-2.5 py-2.5 text-right">
+                      <td data-label="Aksi" className="whitespace-nowrap px-2.5 py-2.5 text-right">
                         <div className="inline-flex items-center justify-end gap-1 whitespace-nowrap">
                           {b.payment &&
                           b.payment.status !== "paid" &&

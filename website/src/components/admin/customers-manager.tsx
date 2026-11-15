@@ -149,7 +149,7 @@ export function CustomersManager({
           aria-label="Tabel Pelanggan Terdaftar"
           tabIndex={0}
         >
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -190,6 +190,7 @@ export function CustomersManager({
                   <tr key={u.id}>
                     <th
                       scope="row"
+                      data-label="Nama & Email"
                       style={{
                         backgroundColor: "var(--surface-white)",
                         color: "var(--navy-900)",
@@ -204,16 +205,16 @@ export function CustomersManager({
                         {u.email}
                       </p>
                     </th>
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs">
+                    <td data-label="Nomor HP" className="whitespace-nowrap px-4 py-3 font-mono text-xs">
                       {u.phone || "-"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs">
+                    <td data-label="Nomor SIM A/C" className="whitespace-nowrap px-4 py-3 font-mono text-xs">
                       {u.driver_license_no || "-"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-center font-bold tabular-nums">
+                    <td data-label="Total Sewa" className="whitespace-nowrap px-4 py-3 text-center font-bold tabular-nums">
                       {u.total_bookings}x
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3">
+                    <td data-label="Peran (Role)" className="whitespace-nowrap px-4 py-3">
                       <span
                         style={{
                           backgroundColor:
@@ -231,7 +232,7 @@ export function CustomersManager({
                         {u.role}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3">
+                    <td data-label="Status Akun" className="whitespace-nowrap px-4 py-3">
                       <span
                         style={{
                           backgroundColor: u.is_active
@@ -247,7 +248,7 @@ export function CustomersManager({
                         {u.is_active ? "Aktif" : "Dibekukan"}
                       </span>
                     </td>
-                    <td className="min-w-[210px] px-4 py-3 text-right">
+                    <td data-label="Aksi" className="min-w-[210px] px-4 py-3 text-right">
                       <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           type="button"

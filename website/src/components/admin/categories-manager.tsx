@@ -219,7 +219,7 @@ export function CategoriesManager({
         className="overflow-hidden border"
       >
         <div className="overflow-x-auto" role="region" aria-label="Tabel Kategori Kendaraan" tabIndex={0}>
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -255,6 +255,7 @@ export function CategoriesManager({
                   <tr key={cat.id}>
                     <th
                       scope="row"
+                      data-label="Nama Kategori"
                       style={{
                         backgroundColor: "var(--surface-white)",
                         color: "var(--navy-900)",
@@ -263,8 +264,9 @@ export function CategoriesManager({
                     >
                       {cat.name}
                     </th>
-                    <td className="px-4 py-3 font-mono text-xs">{cat.slug}</td>
+                    <td data-label="Slug" className="px-4 py-3 font-mono text-xs">{cat.slug}</td>
                     <td
+                      data-label="Deskripsi"
                       style={{ color: "var(--slate-600)" }}
                       className="max-w-md px-4 py-3 text-xs"
                     >

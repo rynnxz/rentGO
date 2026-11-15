@@ -209,4 +209,55 @@ test.describe("RentGo Medan E2E Verification Suite", () => {
     ).toBeVisible();
     await expect(page.getByTestId("ai-rec-card-1")).toBeVisible();
   });
+
+  test("E2E-09: Interactive PickupMap, Light/Dark Theme Toggle persistence, and 320px Mobile Hamburger Drawer", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // 1. Verify PickupMap section on Landing Page with 3 locations & Google Maps route links
+    await expect(page.getByTestId("pickup-map-section")).toBeVisible();
+    await expect(
+      page.getByTestId("location-card-kualanamu-airport"),
+    ).toContainText("Bandara Kualanamu");
+    await expect(
+      page.getByTestId("location-card-stasiun-medan"),
+    ).toContainText("Stasiun Medan");
+    await expect(
+      page.getByTestId("location-card-kantor-rentgo-medan"),
+    ).toContainText("Kantor RentGo Medan");
+    await expect(page.getByTestId("use-my-location-button")).toBeVisible();
+    await expect(
+      page.getByTestId("open-route-kualanamu-airport"),
+    ).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/dir/?api=1&destination=3.6422,98.8853",
+    );
+
+    // 2. Verify ThemeToggle switches between light and dark theme and persists across reload
+    const toggleBtn = page.getByTestId("theme-toggle-button").first();
+    await expect(toggleBtn).toBeVisible();
+    const initialTheme = await page.locator("html").getAttribute("data-theme");
+    await toggleBtn.click();
+    const toggledTheme = await page.locator("html").getAttribute("data-theme");
+    expect(toggledTheme).toBe(initialTheme === "dark" ? "light" : "dark");
+
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme",
+      toggledTheme || "dark",
+    );
+
+    // 3. Verify 320px mobile viewport: Hamburger drawer opens & closes on Esc key
+    await page.setViewportSize({ width: 320, height: 640 });
+    const hamburgerBtn = page.getByTestId("mobile-hamburger-button").first();
+    await expect(hamburgerBtn).toBeVisible();
+    await hamburgerBtn.click();
+
+    const drawer = page.getByTestId("mobile-nav-drawer");
+    await expect(drawer).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(drawer).toHaveCount(0);
+  });
 });

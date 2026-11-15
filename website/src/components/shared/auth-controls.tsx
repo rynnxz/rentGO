@@ -153,7 +153,7 @@ export function AuthControls({
               aria-hidden="true"
             />
           )}
-          <span className="max-w-[110px] truncate sm:max-w-[140px]">
+          <span className=" font-semibold">
             {user.full_name}
           </span>
           <span
@@ -464,7 +464,7 @@ export function AuthControls({
                 </span>
                 <span
                   style={{ color: "var(--fg-secondary)" }}
-                  className="truncate text-[10px] font-normal"
+                  className="break-all text-[10px] font-normal"
                 >
                   nadia.siregar@gmail.com
                 </span>
@@ -506,7 +506,7 @@ export function AuthControls({
                 </span>
                 <span
                   style={{ color: "var(--fg-secondary)" }}
-                  className="truncate text-[10px] font-normal"
+                  className="break-all text-[10px] font-normal"
                 >
                   akbarriansyah339@gmail.com
                 </span>

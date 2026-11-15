@@ -23,9 +23,8 @@ import {
   getTodayWib,
 } from "@/lib/utils";
 import { RentGoLogo } from "@/components/shared/logo";
-import { AuthControls } from "@/components/shared/auth-controls";
 import { PickupMap } from "@/components/shared/pickup-map";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -84,100 +83,8 @@ export default async function LandingSurfacePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 1. Sticky Navbar */}
-      <header
-        style={{ backgroundColor: "var(--surface-white)" }}
-        className="sticky top-0 z-40 border-b shadow-xs"
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <a href="#" className="inline-flex shrink-0 items-center">
-            <RentGoLogo surfaceLabel="Medan & Kualanamu" variant="light" />
-          </a>
-
-          <nav
-            aria-label="Navigasi Halaman Utama"
-            className="hidden items-center gap-4 whitespace-nowrap text-xs font-semibold lg:flex xl:gap-6 xl:text-sm"
-          >
-            <a
-              href="#keunggulan"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              Keunggulan
-            </a>
-            <a
-              href="#armada"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              Armada Unggulan
-            </a>
-            <a
-              href="#alur"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              Cara Sewa
-            </a>
-            <a
-              href="#tarif"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              Transparansi Tarif
-            </a>
-            <a
-              href="#lokasi"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              Lokasi
-            </a>
-            <a
-              href="#faq"
-              style={{ color: "var(--slate-600)" }}
-              className="inline-flex min-h-[40px] items-center hover:underline"
-            >
-              FAQ
-            </a>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
-            <ThemeToggle />
-            {user?.role === "admin" ? (
-              <a
-                href={adminUrl}
-                style={{
-                  backgroundColor: "var(--brand-navy-deep)",
-                  color: "var(--on-dark-fg)",
-                  borderRadius: "var(--radius-control)",
-                }}
-                className="hidden min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold sm:inline-flex"
-              >
-                <ShieldCheck
-                  className="h-3.5 w-3.5 shrink-0"
-                  style={{ color: "var(--accent-500)" }}
-                  aria-hidden="true"
-                />
-                <span>Panel Admin</span>
-              </a>
-            ) : null}
-            <a
-              href={bookUrl}
-              data-testid="navbar-cta-book"
-              style={{
-                backgroundColor: "var(--primary-600)",
-                color: "var(--primary-fg)",
-                borderRadius: "var(--radius-control)",
-              }}
-              className="inline-flex min-h-[40px] items-center px-3.5 py-1.5 text-xs font-bold transition-opacity hover:opacity-95"
-            >
-              Buka Aplikasi Booking
-            </a>
-            <AuthControls user={user} variant="light" />
-          </div>
-        </div>
-      </header>
+      {/* 1. Sticky Responsive Navbar + Slide-in Drawer (< lg) */}
+      <LandingNavbar user={user} bookUrl={bookUrl} adminUrl={adminUrl} />
 
       <main id="main-content">
         {/* 2. Split-Layout Hero + Quick Date Search */}
@@ -363,7 +270,7 @@ export default async function LandingSurfacePage() {
                       className="h-10 w-14 rounded bg-white object-contain p-0.5"
                     />
                     <div className="min-w-0">
-                      <p className="truncate font-bold">Brio Satya RS</p>
+                      <p className="font-bold">Brio Satya RS</p>
                       <p style={{ color: "var(--accent-500)" }} className="font-bold">
                         Rp 320rb/hr
                       </p>
@@ -381,7 +288,7 @@ export default async function LandingSurfacePage() {
                       className="h-10 w-14 rounded bg-white object-contain p-0.5"
                     />
                     <div className="min-w-0">
-                      <p className="truncate font-bold">NMAX 155 ABS</p>
+                      <p className="font-bold">NMAX 155 ABS</p>
                       <p style={{ color: "var(--accent-500)" }} className="font-bold">
                         Rp 140rb/hr
                       </p>

@@ -563,7 +563,7 @@ export default async function AdminDashboardPage() {
           aria-labelledby="recent-bookings-heading"
           tabIndex={0}
         >
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="responsive-stack-table w-full border-collapse text-left text-sm">
             <thead>
               <tr
                 style={{
@@ -591,6 +591,7 @@ export default async function AdminDashboardPage() {
                 <tr key={b.id}>
                   <th
                     scope="row"
+                    data-label="Kode Booking"
                     style={{
                       backgroundColor: "var(--surface-white)",
                       color: "var(--navy-900)",
@@ -599,7 +600,7 @@ export default async function AdminDashboardPage() {
                   >
                     {b.booking_code}
                   </th>
-                  <td className="px-4 py-3">
+                  <td data-label="Pelanggan" className="px-4 py-3">
                     <p style={{ color: "var(--navy-900)" }} className="font-semibold">
                       {b.user_name}
                     </p>
@@ -607,7 +608,7 @@ export default async function AdminDashboardPage() {
                       {b.user_email}
                     </p>
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Unit Kendaraan" className="px-4 py-3">
                     <p style={{ color: "var(--navy-900)" }} className="font-semibold">
                       {b.vehicle_brand} {b.vehicle_model}
                     </p>
@@ -618,20 +619,20 @@ export default async function AdminDashboardPage() {
                       {b.vehicle_plate}
                     </p>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs tabular-nums">
+                  <td data-label="Periode Sewa" className="whitespace-nowrap px-4 py-3 text-xs tabular-nums">
                     {formatDateId(b.start_date)} - {formatDateId(b.end_date)} (
                     {b.total_days} hari)
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
+                  <td data-label="Total Tagihan" className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
                     {formatRupiah(b.total_price)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Status Booking" className="px-4 py-3">
                     <BookingStatusBadge
                       status={b.status}
                       paymentStatus={b.payment?.status}
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Pembayaran" className="px-4 py-3">
                     {b.payment ? (
                       <PaymentStatusBadge status={b.payment.status} />
                     ) : (
