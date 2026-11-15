@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { formatDateId, formatRupiah, getTodayWib } from "@/lib/utils";
 import { MaintenanceStatusBadge } from "@/components/ui/badge";
+import {
+  LoadingBar,
+  LoadingSpinner,
+  LoadingStatusBanner,
+} from "@/components/ui/loading";
 import type {
   MaintenanceStatus,
   MaintenanceWithVehicle,
@@ -32,6 +37,7 @@ export function MaintenanceManager({
   const [status, setStatus] = useState<MaintenanceStatus>("scheduled");
 
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -90,6 +96,7 @@ export function MaintenanceManager({
     nextStatus: MaintenanceStatus,
   ) {
     setLoading(true);
+    setPendingAction(`status:${log.id}:${nextStatus}`);
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -115,11 +122,13 @@ export function MaintenanceManager({
       );
     } finally {
       setLoading(false);
+      setPendingAction(null);
     }
   }
 
   async function handleDelete(log: MaintenanceWithVehicle) {
     setLoading(true);
+    setPendingAction(`delete:${log.id}`);
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -139,6 +148,7 @@ export function MaintenanceManager({
       );
     } finally {
       setLoading(false);
+      setPendingAction(null);
     }
   }
 
@@ -212,6 +222,13 @@ export function MaintenanceManager({
         }}
         className="overflow-hidden border"
       >
+        {loading ? (
+          <LoadingBar
+            tone="primary"
+            height="3px"
+            label="Menyinkronkan jadwal perawatan bengkel dengan katalog ketersediaan"
+          />
+        ) : null}
         <div
           className="overflow-x-auto"
           role="region"
@@ -252,8 +269,25 @@ export function MaintenanceManager({
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
-                  <tr key={log.id} data-testid={`maint-row-${log.vehicle_plate}`}>
+                logs.map((log) => {
+                  const isRowBusy = Boolean(
+                    pendingAction && pendingAction.includes(`:${log.id}`),
+                  );
+                  const isStartServicePending =
+                    pendingAction === `status:${log.id}:in_progress`;
+                  const isDoneServicePending =
+                    pendingAction === `status:${log.id}:done`;
+                  const isDeletePending = pendingAction === `delete:${log.id}`;
+
+                  return (
+                  <tr
+                    key={log.id}
+                    aria-busy={isRowBusy}
+                    data-testid={`maint-row-${log.vehicle_plate}`}
+                    className={
+                      isRowBusy ? "opacity-70 transition-opacity" : undefined
+                    }
+                  >
                     <th
                       scope="row"
                       data-label="Unit Kendaraan"
@@ -312,9 +346,20 @@ export function MaintenanceManager({
                               borderColor: "var(--accent-500)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="inline-flex min-h-[38px] items-center border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                            className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                           >
-                            Mulai Servis
+                            {isStartServicePending ? (
+                              <LoadingSpinner
+                                size="xs"
+                                tone="accent"
+                                label="Memulai servis"
+                              />
+                            ) : null}
+                            <span>
+                              {isStartServicePending
+                                ? "Memproses..."
+                                : "Mulai Servis"}
+                            </span>
                           </button>
                         ) : null}
 
@@ -329,9 +374,20 @@ export function MaintenanceManager({
                               borderColor: "var(--secondary-600)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="inline-flex min-h-[38px] items-center border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                            className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                           >
-                            Selesai Servis
+                            {isDoneServicePending ? (
+                              <LoadingSpinner
+                                size="xs"
+                                tone="secondary"
+                                label="Menyelesaikan servis"
+                              />
+                            ) : null}
+                            <span>
+                              {isDoneServicePending
+                                ? "Memproses..."
+                                : "Selesai Servis"}
+                            </span>
                           </button>
                         ) : null}
 
@@ -345,15 +401,24 @@ export function MaintenanceManager({
                             borderColor: "var(--danger)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                         >
-                          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          <span>Hapus</span>
+                          {isDeletePending ? (
+                            <LoadingSpinner
+                              size="xs"
+                              tone="danger"
+                              label="Menghapus jadwal servis"
+                            />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          )}
+                          <span>{isDeletePending ? "Menghapus..." : "Hapus"}</span>
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -410,6 +475,13 @@ export function MaintenanceManager({
             </button>
           </div>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
+          {loading && !pendingAction ? (
+            <LoadingStatusBanner
+              title="Menyimpan jadwal perawatan dan menyinkronkan ketersediaan armada..."
+              description="Mengunci tanggal servis agar unit tidak dapat dipesan pelanggan pada periode tersebut."
+              tone="primary"
+            />
+          ) : null}
 
           {errorMsg ? (
             <div
@@ -573,9 +645,16 @@ export function MaintenanceManager({
                 color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="min-h-[44px] px-4 py-2 text-xs font-semibold"
+              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-xs font-semibold disabled:opacity-65"
             >
-              {loading ? "Menyimpan..." : "Simpan Jadwal"}
+              {loading && !pendingAction ? (
+                <LoadingSpinner
+                  size="xs"
+                  tone="light"
+                  label="Menyimpan jadwal servis"
+                />
+              ) : null}
+              <span>{loading && !pendingAction ? "Menyimpan..." : "Simpan Jadwal"}</span>
             </button>
           </div>
         </form>

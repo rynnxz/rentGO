@@ -20,6 +20,11 @@ import {
   BookingStatusBadge,
   PaymentStatusBadge,
 } from "@/components/ui/badge";
+import {
+  LoadingBar,
+  LoadingSpinner,
+  LoadingStatusBanner,
+} from "@/components/ui/loading";
 import type {
   BookingDetailView,
   BookingStatus,
@@ -55,6 +60,8 @@ export function BookingsManager({
   const [selected, setSelected] = useState<BookingDetailView | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -96,6 +103,10 @@ export function BookingsManager({
     notesOverride?: string,
   ) {
     setLoading(true);
+    setPendingAction(`status:${booking.id}:${nextStatus}`);
+    setPendingLabel(
+      `Memperbarui status pesanan ${booking.booking_code} menjadi ${STATUS_ACTION_LABELS[nextStatus]}...`,
+    );
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -127,6 +138,8 @@ export function BookingsManager({
       );
     } finally {
       setLoading(false);
+      setPendingAction(null);
+      setPendingLabel(null);
     }
   }
 
@@ -135,6 +148,10 @@ export function BookingsManager({
     paymentStatus: PaymentStatus,
   ) {
     setLoading(true);
+    setPendingAction(`payment:${booking.id}:${paymentStatus}`);
+    setPendingLabel(
+      `Memverifikasi status pembayaran pesanan ${booking.booking_code}...`,
+    );
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -171,6 +188,8 @@ export function BookingsManager({
       );
     } finally {
       setLoading(false);
+      setPendingAction(null);
+      setPendingLabel(null);
     }
   }
 
@@ -203,6 +222,15 @@ export function BookingsManager({
           <span>Ekspor Laporan CSV</span>
         </a>
       </div>
+
+      {loading && pendingLabel ? (
+        <LoadingStatusBanner
+          title={pendingLabel}
+          description="Menyinkronkan perubahan status ke database operasional Medan."
+          tone="primary"
+          testId="admin-booking-loading-banner"
+        />
+      ) : null}
 
       {feedback ? (
         <div
@@ -301,6 +329,13 @@ export function BookingsManager({
         }}
         className="overflow-hidden border"
       >
+        {loading ? (
+          <LoadingBar
+            tone="primary"
+            height="3px"
+            label={pendingLabel ?? "Memperbarui data pesanan"}
+          />
+        ) : null}
         <div
           className="overflow-x-auto"
           role="region"
@@ -356,11 +391,24 @@ export function BookingsManager({
                   );
                   const extraActionCount =
                     allowedNext.length - (primaryNext ? 1 : 0);
+                  const isRowBusy = Boolean(
+                    pendingAction && pendingAction.includes(`:${b.id}:`),
+                  );
+                  const isVerifyPaidPending =
+                    pendingAction === `payment:${b.id}:paid`;
+                  const isPrimaryNextPending = Boolean(
+                    primaryNext &&
+                      pendingAction === `status:${b.id}:${primaryNext.status}`,
+                  );
 
                   return (
                     <tr
                       key={b.id}
+                      aria-busy={isRowBusy}
                       data-testid={`booking-row-${b.booking_code}`}
+                      className={
+                        isRowBusy ? "opacity-75 transition-opacity" : undefined
+                      }
                     >
                       <th
                         scope="row"
@@ -441,13 +489,25 @@ export function BookingsManager({
                                 borderColor: "var(--secondary-600)",
                                 borderRadius: "var(--radius-control)",
                               }}
-                              className="inline-flex min-h-[34px] items-center gap-1 border px-2 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                              className="inline-flex min-h-[34px] items-center gap-1 border px-2 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                             >
-                              <CheckCircle2
-                                className="h-3 w-3 shrink-0"
-                                aria-hidden="true"
-                              />
-                              <span>Set Lunas</span>
+                              {isVerifyPaidPending ? (
+                                <LoadingSpinner
+                                  size="xs"
+                                  tone="secondary"
+                                  label="Memverifikasi pembayaran"
+                                />
+                              ) : (
+                                <CheckCircle2
+                                  className="h-3 w-3 shrink-0"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span>
+                                {isVerifyPaidPending
+                                  ? "Memverifikasi..."
+                                  : "Set Lunas"}
+                              </span>
                             </button>
                           ) : null}
 
@@ -465,10 +525,23 @@ export function BookingsManager({
                                 borderColor: "var(--primary-700)",
                                 borderRadius: "var(--radius-control)",
                               }}
-                              className="inline-flex min-h-[34px] items-center border px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                              className="inline-flex min-h-[34px] items-center gap-1.5 border px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                             >
-                              {COMPACT_PRIMARY_LABELS[primaryNext.status] ??
-                                STATUS_ACTION_LABELS[primaryNext.status]}
+                              {isPrimaryNextPending ? (
+                                <LoadingSpinner
+                                  size="xs"
+                                  tone="light"
+                                  label="Memproses transisi status"
+                                />
+                              ) : null}
+                              <span>
+                                {isPrimaryNextPending
+                                  ? "Memproses..."
+                                  : (COMPACT_PRIMARY_LABELS[
+                                      primaryNext.status
+                                    ] ??
+                                    STATUS_ACTION_LABELS[primaryNext.status])}
+                              </span>
                             </button>
                           ) : null}
 
@@ -575,6 +648,14 @@ export function BookingsManager({
             </div>
 
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-6">
+              {loading && pendingLabel ? (
+                <LoadingStatusBanner
+                  title={pendingLabel}
+                  description="Menyimpan pembaruan status pesanan ke server."
+                  tone="primary"
+                />
+              ) : null}
+
               {/* 1. Semua Menu Aksi Transisi Status (Collapsible overflow actions placed neatly inside modal) */}
               <div
                 style={{
@@ -625,6 +706,9 @@ export function BookingsManager({
                           nextItem.status === "confirmed" ||
                           nextItem.status === "ongoing" ||
                           nextItem.status === "completed";
+                        const isThisTransitionPending =
+                          pendingAction ===
+                          `status:${selected.id}:${nextItem.status}`;
                         return (
                           <button
                             key={nextItem.status}
@@ -650,9 +734,20 @@ export function BookingsManager({
                                 : "var(--danger)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold shadow-2xs transition-opacity hover:opacity-90"
+                            className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                           >
-                            <span>{STATUS_ACTION_LABELS[nextItem.status]}</span>
+                            {isThisTransitionPending ? (
+                              <LoadingSpinner
+                                size="xs"
+                                tone={isPrimary ? "light" : "danger"}
+                                label="Memproses transisi status"
+                              />
+                            ) : null}
+                            <span>
+                              {isThisTransitionPending
+                                ? "Memproses..."
+                                : STATUS_ACTION_LABELS[nextItem.status]}
+                            </span>
                           </button>
                         );
                       },
@@ -747,10 +842,22 @@ export function BookingsManager({
                         borderColor: "var(--secondary-600)",
                         borderRadius: "var(--radius-control)",
                       }}
-                      className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold"
+                      className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold disabled:opacity-65"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Tandai Lunas (Paid)</span>
+                      {pendingAction === `payment:${selected.id}:paid` ? (
+                        <LoadingSpinner
+                          size="xs"
+                          tone="secondary"
+                          label="Memverifikasi pembayaran lunas"
+                        />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      <span>
+                        {pendingAction === `payment:${selected.id}:paid`
+                          ? "Memverifikasi..."
+                          : "Tandai Lunas (Paid)"}
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -764,9 +871,20 @@ export function BookingsManager({
                         borderColor: "var(--info)",
                         borderRadius: "var(--radius-control)",
                       }}
-                      className="inline-flex min-h-[40px] items-center border px-3.5 py-2 text-xs font-bold"
+                      className="inline-flex min-h-[40px] items-center gap-1.5 border px-3.5 py-2 text-xs font-bold disabled:opacity-65"
                     >
-                      Tandai Refund
+                      {pendingAction === `payment:${selected.id}:refunded` ? (
+                        <LoadingSpinner
+                          size="xs"
+                          tone="primary"
+                          label="Memproses refund"
+                        />
+                      ) : null}
+                      <span>
+                        {pendingAction === `payment:${selected.id}:refunded`
+                          ? "Memproses..."
+                          : "Tandai Refund"}
+                      </span>
                     </button>
                   </div>
                 </div>

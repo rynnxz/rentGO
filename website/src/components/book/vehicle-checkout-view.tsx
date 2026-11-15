@@ -21,6 +21,7 @@ import {
 import { getLocationByName } from "@/lib/locations";
 import { AuthControls } from "@/components/shared/auth-controls";
 import { PickupMap } from "@/components/shared/pickup-map";
+import { LoadingSpinner, LoadingStatusBanner } from "@/components/ui/loading";
 import type {
   PaymentMethod,
   UserRecord,
@@ -405,9 +406,19 @@ export function VehicleCheckoutView({
             ) : (
               <form
                 onSubmit={handleCheckout}
+                aria-busy={submitting}
                 className="space-y-4"
                 data-testid="checkout-form"
               >
+                {submitting ? (
+                  <LoadingStatusBanner
+                    title="Mengunci jadwal sewa dan membuat kode pembayaran QRIS..."
+                    description="Memvalidasi ketersediaan anti double-booking di server dan menyiapkan Midtrans Sandbox."
+                    tone="primary"
+                    testId="checkout-submitting-banner"
+                  />
+                ) : null}
+
                 {errorMsg ? (
                   <div
                     role="alert"
@@ -721,9 +732,17 @@ export function VehicleCheckoutView({
                     color: "var(--on-dark-fg)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="flex min-h-[48px] w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold transition-opacity hover:opacity-95 disabled:opacity-50"
+                  className="flex min-h-[48px] w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold transition-opacity hover:opacity-95 disabled:opacity-65"
                 >
-                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  {submitting ? (
+                    <LoadingSpinner
+                      size="xs"
+                      tone="light"
+                      label="Membuat pesanan dan mengunci jadwal"
+                    />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                  )}
                   <span>
                     {submitting
                       ? "Mengunci Jadwal & Membuat QRIS..."

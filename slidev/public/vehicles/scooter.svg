@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" width="640" height="380" role="img" aria-label="Ilustrasi Motor Matik RentGo">
+  <rect width="640" height="380" fill="#EFF6FF"/>
+  <rect x="24" y="24" width="144" height="32" rx="6" fill="#0B1F3A"/>
+  <text x="96" y="45" fill="#F59E0B" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle">MOTOR MATIK</text>
+  <line x1="80" y1="304" x2="560" y2="304" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="210" cy="272" r="38" fill="#0B1F3A"/>
+  <circle cx="210" cy="272" r="18" fill="#E2E8F0"/>
+  <circle cx="434" cy="272" r="38" fill="#0B1F3A"/>
+  <circle cx="434" cy="272" r="18" fill="#E2E8F0"/>
+  <path d="M186 248 L234 196 L318 196 L346 244 L396 244 L416 164 L384 146 L426 140 L456 236 L434 268 L186 268 Z" fill="#1D4ED8" stroke="#0B1F3A" stroke-width="5" stroke-linejoin="round"/>
+  <rect x="224" y="176" width="96" height="22" rx="10" fill="#0B1F3A"/>
+  <circle cx="444" cy="182" r="10" fill="#F59E0B"/>
+  <text x="320" y="352" fill="#475569" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">Ilustrasi Placeholder Skutik Komuter Medan (2 Helm SNI)</text>
+</svg>

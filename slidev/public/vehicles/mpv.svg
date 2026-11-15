@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" width="640" height="380" role="img" aria-label="Ilustrasi MPV 7 Kursi RentGo">
+  <rect width="640" height="380" fill="#EFF6FF"/>
+  <rect x="24" y="24" width="156" height="32" rx="6" fill="#0B1F3A"/>
+  <text x="102" y="45" fill="#F59E0B" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle">MPV / MINIBUS</text>
+  <line x1="50" y1="304" x2="590" y2="304" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M108 250 L142 164 Q154 144 184 144 L424 144 Q454 144 476 176 L532 222 Q546 234 546 254 L546 282 Q546 292 532 292 L106 292 Q96 292 96 280 L96 262 Q96 250 108 250 Z" fill="#0B1F3A" stroke="#0B1F3A" stroke-width="4"/>
+  <rect x="156" y="158" width="90" height="52" rx="6" fill="#DBEAFE"/>
+  <rect x="258" y="158" width="96" height="52" rx="6" fill="#DBEAFE"/>
+  <path d="M366 158 L430 158 Q448 158 462 180 L482 210 L366 210 Z" fill="#DBEAFE"/>
+  <rect x="116" y="238" width="400" height="8" rx="4" fill="#F59E0B"/>
+  <rect x="518" y="232" width="24" height="14" rx="4" fill="#F59E0B"/>
+  <circle cx="192" cy="292" r="36" fill="#1E40AF"/>
+  <circle cx="192" cy="292" r="17" fill="#F8FAFC"/>
+  <circle cx="456" cy="292" r="36" fill="#1E40AF"/>
+  <circle cx="456" cy="292" r="17" fill="#F8FAFC"/>
+  <text x="320" y="352" fill="#475569" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">Ilustrasi Placeholder Armada RentGo Medan (7 Kursi)</text>
+</svg>

@@ -3,6 +3,12 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, Fuel, Gauge, Sparkles, Users } from "lucide-react";
+import {
+  CatalogCardSkeleton,
+  LoadingBar,
+  LoadingSpinner,
+  LoadingStatusBanner,
+} from "@/components/ui/loading";
 import { formatDateId, formatRupiah } from "@/lib/utils";
 import { calculateRentalDays } from "@/lib/pricing";
 import type {
@@ -37,6 +43,9 @@ export function CatalogView({
   );
   const [loadingDates, setLoadingDates] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [navigatingVehicleId, setNavigatingVehicleId] = useState<string | null>(
+    null,
+  );
 
   // AI Recommendation Panel State
   const [aiOpen, setAiOpen] = useState(true);
@@ -180,8 +189,17 @@ export function CatalogView({
             color: "var(--slate-900)",
             borderRadius: "var(--radius-card)",
           }}
-          className="mt-6 grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-6"
+          className="mt-6 overflow-hidden"
         >
+          {loadingDates ? (
+            <LoadingBar
+              tone="accent"
+              height="4px"
+              label="Memperbarui ketersediaan armada berdasarkan tanggal"
+              testId="dates-loading-bar"
+            />
+          ) : null}
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-6">
           <div>
             <label
               htmlFor="search-start-date"
@@ -315,6 +333,7 @@ export function CatalogView({
               <option value="newest">Tahun Terbaru</option>
             </select>
           </div>
+          </div>
         </div>
 
         {dateError ? (
@@ -326,10 +345,24 @@ export function CatalogView({
             {dateError}
           </p>
         ) : (
-          <p className="mt-3 text-xs opacity-90 tabular-nums">
-            Periode terpilih: <strong>{formatDateId(startDate)}</strong> s/d{" "}
-            <strong>{formatDateId(endDate)}</strong> ({rentalDays} hari sewa
-            inklusif) - {loadingDates ? "Memperbarui ketersediaan..." : `${filteredVehicles.length} unit tersedia`}.
+          <p className="mt-3 inline-flex flex-wrap items-center gap-2 text-xs opacity-90 tabular-nums">
+            <span>
+              Periode terpilih: <strong>{formatDateId(startDate)}</strong> s/d{" "}
+              <strong>{formatDateId(endDate)}</strong> ({rentalDays} hari sewa
+              inklusif) -
+            </span>
+            {loadingDates ? (
+              <span className="inline-flex items-center gap-1.5 font-bold text-[var(--accent-500)]">
+                <LoadingSpinner
+                  size="xs"
+                  tone="accent"
+                  label="Memperbarui ketersediaan armada"
+                />
+                <span>Menyinkronkan ketersediaan armada real-time...</span>
+              </span>
+            ) : (
+              <strong>{filteredVehicles.length} unit tersedia.</strong>
+            )}
           </p>
         )}
       </section>
@@ -494,14 +527,69 @@ export function CatalogView({
                   color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
-                className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold disabled:opacity-50"
+                className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold disabled:opacity-65"
               >
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                {aiLoading ? (
+                  <LoadingSpinner
+                    size="xs"
+                    tone="light"
+                    label="Menganalisis armada dengan Gemini AI"
+                  />
+                ) : (
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                )}
                 <span>
                   {aiLoading ? "Menganalisis Armada..." : "Cari Rekomendasi AI"}
                 </span>
               </button>
             </form>
+
+            {aiLoading ? (
+              <div
+                data-testid="ai-loading-skeleton"
+                className="space-y-4"
+              >
+                <LoadingStatusBanner
+                  title="Asisten AI Gemini sedang menganalisis stok armada Medan..."
+                  description="Mencocokkan kapasitas kursi, transmisi, rute perjalanan, dan tarif harian terbaik untuk tanggal Anda."
+                  tone="primary"
+                />
+                <div
+                  aria-hidden="true"
+                  className="grid gap-4 md:grid-cols-3"
+                >
+                  {[1, 2, 3].map((item) => (
+                    <div
+                      key={item}
+                      style={{
+                        backgroundColor: "var(--surface-white)",
+                        borderRadius: "var(--radius-card)",
+                      }}
+                      className="space-y-3 border p-4"
+                    >
+                      <div className="flex justify-between">
+                        <div
+                          style={{ backgroundColor: "var(--accent-100)" }}
+                          className="h-5 w-20 animate-pulse rounded"
+                        />
+                        <div
+                          style={{ backgroundColor: "var(--primary-100)" }}
+                          className="h-4 w-24 animate-pulse rounded"
+                        />
+                      </div>
+                      <div
+                        style={{ backgroundColor: "var(--slate-200)" }}
+                        className="h-5 w-40 animate-pulse rounded"
+                      />
+                      <div
+                        style={{ backgroundColor: "var(--slate-100)" }}
+                        className="h-10 w-full animate-pulse rounded"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {aiError ? (
               <div
@@ -626,14 +714,26 @@ export function CatalogView({
                           </div>
                           <Link
                             href={`/book/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
+                            onClick={() => setNavigatingVehicleId(v.id)}
                             style={{
                               backgroundColor: "var(--primary-600)",
                               color: "var(--on-dark-fg)",
                               borderRadius: "var(--radius-control)",
                             }}
-                            className="inline-flex min-h-[40px] items-center px-3 py-1.5 text-xs font-semibold"
+                            className="inline-flex min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
                           >
-                            Pilih Unit Ini
+                            {navigatingVehicleId === v.id ? (
+                              <>
+                                <LoadingSpinner
+                                  size="xs"
+                                  tone="light"
+                                  label="Membuka halaman sewa"
+                                />
+                                <span>Membuka...</span>
+                              </>
+                            ) : (
+                              <span>Pilih Unit Ini</span>
+                            )}
                           </Link>
                         </div>
                       </div>
@@ -647,7 +747,11 @@ export function CatalogView({
       </section>
 
       {/* Available Vehicle Cards Grid */}
-      <section aria-labelledby="available-fleet-heading" className="space-y-4">
+      <section
+        aria-labelledby="available-fleet-heading"
+        aria-busy={loadingDates}
+        className="space-y-4"
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2
@@ -662,6 +766,18 @@ export function CatalogView({
             </p>
           </div>
         </div>
+
+        {loadingDates ? (
+          <div className="space-y-4">
+            <LoadingStatusBanner
+              title="Memperbarui ketersediaan armada untuk tanggal pilihan Anda..."
+              description="Memeriksa bentrok jadwal sewa dan perawatan bengkel di database."
+              tone="primary"
+              testId="fleet-dates-loading-banner"
+            />
+            <CatalogCardSkeleton count={3} />
+          </div>
+        ) : null}
 
         {filteredVehicles.length === 0 ? (
           <div
@@ -844,15 +960,27 @@ export function CatalogView({
 
                     <Link
                       href={`/book/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
+                      onClick={() => setNavigatingVehicleId(v.id)}
                       data-testid={`select-vehicle-${v.plate_number}`}
                       style={{
                         backgroundColor: "var(--primary-600)",
                         color: "var(--on-dark-fg)",
                         borderRadius: "var(--radius-control)",
                       }}
-                      className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-semibold transition-opacity hover:opacity-95"
+                      className="inline-flex min-h-[44px] items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-opacity hover:opacity-95"
                     >
-                      Sewa Sekarang
+                      {navigatingVehicleId === v.id ? (
+                        <>
+                          <LoadingSpinner
+                            size="xs"
+                            tone="light"
+                            label="Membuka formulir sewa"
+                          />
+                          <span>Membuka...</span>
+                        </>
+                      ) : (
+                        <span>Sewa Sekarang</span>
+                      )}
                     </Link>
                   </div>
                 </article>

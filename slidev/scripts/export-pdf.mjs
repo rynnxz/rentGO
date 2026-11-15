@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import http from "node:http";
 import { createRequire } from "node:module";
 
 const requireFromWebsite = createRequire(
-  path.resolve(process.cwd(), "..", "website", "package.json"),
+  path.resolve(process.cwd(), "..", "website", "package.json")
 );
 const { chromium } = requireFromWebsite("@playwright/test");
 
@@ -15,198 +16,204 @@ const localChromium1248 = path.join(
   "ms-playwright",
   "chromium-1248",
   "chrome-win64",
-  "chrome.exe",
+  "chrome.exe"
 );
 const executablePath = fs.existsSync(localChromium1248)
   ? localChromium1248
   : undefined;
 
-function imageToDataUri(filePath) {
-  if (!fs.existsSync(filePath)) return "";
-  const bytes = fs.readFileSync(filePath);
-  return `data:image/png;base64,${bytes.toString("base64")}`;
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".jfif": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+function startStaticSpaServer(distDir) {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      try {
+        const parsed = new URL(req.url || "/", "http://127.0.0.1");
+        let relPath = decodeURIComponent(parsed.pathname);
+        if (relPath === "/") relPath = "/index.html";
+
+        let filePath = path.join(distDir, relPath);
+        if (!filePath.startsWith(distDir)) {
+          res.writeHead(403);
+          res.end("Forbidden");
+          return;
+        }
+
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+          filePath = path.join(distDir, "index.html");
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = MIME_TYPES[ext] || "application/octet-stream";
+        res.writeHead(200, { "Content-Type": contentType });
+        fs.createReadStream(filePath).pipe(res);
+      } catch (err) {
+        res.writeHead(500);
+        res.end(String(err));
+      }
+    });
+
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      resolve({
+        server,
+        port: typeof address === "object" && address ? address.port : 0,
+      });
+    });
+  });
 }
 
 async function main() {
-  const outDir = path.resolve(process.cwd(), "dist");
-  fs.mkdirSync(outDir, { recursive: true });
-  const pdfPath = path.join(outDir, "RentGo-UTS.pdf");
-
-  const screensDir = path.resolve(process.cwd(), "public", "screens");
-  const rawSlides = fs.readFileSync(
-    path.resolve(process.cwd(), "slides.md"),
-    "utf8",
-  );
-  const styleCss = fs.readFileSync(
-    path.resolve(process.cwd(), "style.css"),
-    "utf8",
-  );
-
-  // Strip frontmatter and split slides by `\n---\n`
-  const withoutFrontmatter = rawSlides.replace(/^---[\s\S]*?---\r?\n/, "");
-  const slideBlocks = withoutFrontmatter
-    .split(/\r?\n---\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  function renderSlideBlockToHtml(md) {
-    let html = md
-      // Replace /screens/*.png with inline base64 data URI
-      .replace(/src="\/screens\/([^"]+\.png)"/g, (_m, fname) => {
-        const uri = imageToDataUri(path.join(screensDir, fname));
-        return uri ? `src="${uri}"` : `src="/screens/${fname}"`;
-      })
-      // Convert mermaid blocks to styled architecture boxes
-      .replace(/```mermaid\r?\n([\s\S]*?)```/g, (_m, code) => {
-        return `<pre class="mermaid-box">${code
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")}</pre>`;
-      })
-      // Convert headings
-      .replace(/^# (.*)$/gm, "<h1>$1</h1>")
-      .replace(/^## (.*)$/gm, "<h2>$1</h2>")
-      // Convert bold & inline code
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>");
-
-    return html;
+  const distDir = path.resolve(process.cwd(), "dist");
+  if (!fs.existsSync(path.join(distDir, "index.html"))) {
+    throw new Error(
+      "dist/index.html not found. Please run `npm run build` before `npm run export`."
+    );
   }
 
-  const slidesHtml = slideBlocks
-    .map(
-      (block, idx) => `
-      <section class="slide-page slidev-layout">
-        <header class="slide-topbar">
-          <span class="rentgo-badge">RentGo Medan - UTS MMPRPL</span>
-          <span class="slide-meta">Akbar Riansyah | Slide ${idx + 1} / ${slideBlocks.length}</span>
-        </header>
-        <div class="slide-body">
-          ${renderSlideBlockToHtml(block)}
-        </div>
-      </section>`,
-    )
-    .join("\n");
+  const { server, port } = await startStaticSpaServer(distDir);
+  const baseUrl = `http://127.0.0.1:${port}`;
+  console.log(`[slidev:export] Serving compiled SPA from ${distDir} at ${baseUrl}`);
 
-  const fullDocument = `<!DOCTYPE html>
+  const browser = await chromium.launch({
+    headless: true,
+    ...(executablePath ? { executablePath } : {}),
+  });
+
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      deviceScaleFactor: 2,
+      reducedMotion: "reduce",
+    });
+
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (err) => {
+      pageErrors.push(err.message || String(err));
+    });
+
+    const totalSlides = 16;
+    const slideImagesBase64 = [];
+
+    for (let i = 1; i <= totalSlides; i++) {
+      const targetUrl = `${baseUrl}/${i}?clicks=99`;
+      await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
+      await page
+        .locator(`.slidev-page-${i}, .slidev-layout:visible`)
+        .first()
+        .waitFor({ state: "visible", timeout: 10000 });
+      await page.waitForTimeout(i === 16 ? 2200 : 450);
+
+      const visibleHtmlLen = await page.evaluate((slideNo) => {
+        const pageEl =
+          document.querySelector(`.slidev-page-${slideNo}`) ||
+          document.querySelector("#slideshow");
+        return pageEl ? pageEl.innerHTML.length : 0;
+      }, i);
+
+      if (visibleHtmlLen < 50) {
+        throw new Error(
+          `Slide ${i} rendered empty or nearly empty (HTML length: ${visibleHtmlLen})`
+        );
+      }
+
+      const buf = await page.screenshot({ type: "png" });
+      slideImagesBase64.push(`data:image/png;base64,${buf.toString("base64")}`);
+      console.log(
+        `[slidev:export] Verified & captured Slide ${i}/${totalSlides} (DOM size: ${visibleHtmlLen} chars)`
+      );
+    }
+
+    if (pageErrors.length > 0) {
+      throw new Error(`Runtime page errors detected:\n${pageErrors.join("\n")}`);
+    }
+
+    // Build a static 16-page 16:9 PDF from the exact rendered slides (no animations, projector safe)
+    const pdfPage = await context.newPage();
+    const pagesHtml = slideImagesBase64
+      .map(
+        (src, idx) => `
+      <div class="pdf-slide">
+        <img src="${src}" alt="Slide ${idx + 1}" />
+      </div>`
+      )
+      .join("\n");
+
+    const pdfHtml = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <title>RentGo Medan - Dek Presentasi UTS (Akbar Riansyah)</title>
+  <title>RentGo Medan - Presentasi UTS MMPRPL (Akbar Riansyah)</title>
   <style>
-    ${styleCss}
     @page {
       size: 1280px 720px;
       margin: 0;
     }
     * {
       box-sizing: border-box;
-    }
-    body {
       margin: 0;
       padding: 0;
-      background: var(--slate-50);
-      font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     }
-    .slide-page {
+    html, body {
+      background: #050914;
+      width: 1280px;
+    }
+    .pdf-slide {
       width: 1280px;
       height: 720px;
-      padding: 40px 56px;
       page-break-after: always;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      background: var(--slate-50);
-      border-bottom: 6px solid var(--primary-600);
       overflow: hidden;
+      background: #050914;
     }
-    .slide-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--slate-200);
-    }
-    .slide-meta {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--slate-600);
-    }
-    .slide-body h1 {
-      font-size: 32px;
-      margin: 0 0 8px 0;
-      color: var(--navy-900);
-    }
-    .slide-body h2 {
-      font-size: 20px;
-      margin: 0 0 14px 0;
-      color: var(--primary-600);
-    }
-    .slide-body p, .slide-body li {
-      font-size: 15px;
-      line-height: 1.5;
-    }
-    .grid { display: grid; }
-    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-    .col-span-5 { grid-column: span 5 / span 5; }
-    .col-span-7 { grid-column: span 7 / span 7; }
-    .gap-2 { gap: 10px; }
-    .gap-3 { gap: 14px; }
-    .gap-4 { gap: 18px; }
-    .mt-1 { margin-top: 4px; }
-    .mt-2 { margin-top: 8px; }
-    .mt-3 { margin-top: 12px; }
-    .mt-4 { margin-top: 16px; }
-    .mt-6 { margin-top: 24px; }
-    .mermaid-box {
-      background: var(--navy-900);
-      color: var(--surface-white);
-      padding: 14px 18px;
-      border-radius: 10px;
-      font-family: monospace;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    img {
-      max-height: 360px;
-      width: 100%;
-      object-fit: contain;
-      border-radius: 8px;
-      border: 1px solid var(--slate-200);
-      background: var(--surface-white);
-    }
-    code {
-      background: var(--primary-50);
-      color: var(--primary-700);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 0.9em;
+    .pdf-slide img {
+      width: 1280px;
+      height: 720px;
+      display: block;
+      object-fit: cover;
     }
   </style>
 </head>
 <body>
-  ${slidesHtml}
+  ${pagesHtml}
 </body>
 </html>`;
 
-  const browser = await chromium.launch({
-    headless: true,
-    ...(executablePath ? { executablePath } : {}),
-  });
-  const page = await browser.newPage();
-  await page.setContent(fullDocument, { waitUntil: "load" });
-  await page.pdf({
-    path: pdfPath,
-    width: "1280px",
-    height: "720px",
-    printBackground: true,
-  });
-  await browser.close();
-  console.log(`[slidev:export] Exported ${slideBlocks.length}-slide PDF deck to ${pdfPath}`);
+    await pdfPage.setContent(pdfHtml, { waitUntil: "load" });
+
+    const outPdfDist = path.join(distDir, "RentGo-UTS.pdf");
+    const outPdfRoot = path.resolve(process.cwd(), "slides-export.pdf");
+
+    await pdfPage.pdf({
+      path: outPdfDist,
+      width: "1280px",
+      height: "720px",
+      printBackground: true,
+    });
+    fs.copyFileSync(outPdfDist, outPdfRoot);
+
+    console.log(`[slidev:export] Exported 16-slide static backup PDF to:`);
+    console.log(`  1) ${outPdfDist}`);
+    console.log(`  2) ${outPdfRoot}`);
+  } finally {
+    await browser.close();
+    server.close();
+  }
 }
 
 main().catch((err) => {

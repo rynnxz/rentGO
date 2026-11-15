@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Edit2, Plus, Search, Trash2, Upload } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import { VehicleStatusBadge } from "@/components/ui/badge";
+import {
+  LoadingBar,
+  LoadingSpinner,
+  LoadingStatusBanner,
+} from "@/components/ui/loading";
 import type {
   FuelType,
   TransmissionType,
@@ -62,6 +67,7 @@ export function VehiclesManager({
   const [imageUrl, setImageUrl] = useState("/vehicles/Toyota-Avanza-1.5-G-CVT.png");
 
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -217,6 +223,7 @@ export function VehiclesManager({
 
   async function handleDelete(v: VehicleWithCategory) {
     setLoading(true);
+    setDeletingId(v.id);
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -238,6 +245,7 @@ export function VehiclesManager({
       );
     } finally {
       setLoading(false);
+      setDeletingId(null);
     }
   }
 
@@ -270,6 +278,14 @@ export function VehiclesManager({
           <span>Tambah Kendaraan</span>
         </button>
       </div>
+
+      {deletingId ? (
+        <LoadingStatusBanner
+          title="Menonaktifkan unit armada dari katalog aktif..."
+          description="Menyinkronkan status soft-delete kendaraan dengan database server."
+          tone="accent"
+        />
+      ) : null}
 
       {feedback ? (
         <div
@@ -417,6 +433,13 @@ export function VehiclesManager({
         }}
         className="overflow-hidden border"
       >
+        {loading ? (
+          <LoadingBar
+            tone="primary"
+            height="3px"
+            label="Memperbarui daftar armada kendaraan"
+          />
+        ) : null}
         <div
           className="overflow-x-auto"
           role="region"
@@ -459,7 +482,16 @@ export function VehiclesManager({
                 </tr>
               ) : (
                 paginated.map((v) => (
-                  <tr key={v.id} data-testid={`vehicle-row-${v.plate_number}`}>
+                  <tr
+                    key={v.id}
+                    aria-busy={deletingId === v.id}
+                    data-testid={`vehicle-row-${v.plate_number}`}
+                    className={
+                      deletingId === v.id
+                        ? "opacity-65 transition-opacity"
+                        : undefined
+                    }
+                  >
                     <th
                       scope="row"
                       data-label="Unit Kendaraan"
@@ -538,10 +570,20 @@ export function VehiclesManager({
                             borderColor: "var(--danger)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                         >
-                          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          <span>Hapus</span>
+                          {deletingId === v.id ? (
+                            <LoadingSpinner
+                              size="xs"
+                              tone="danger"
+                              label="Menghapus kendaraan"
+                            />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          )}
+                          <span>
+                            {deletingId === v.id ? "Menghapus..." : "Hapus"}
+                          </span>
                         </button>
                       </div>
                     </td>
@@ -644,6 +686,19 @@ export function VehiclesManager({
             </button>
           </div>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
+          {uploading || (loading && !deletingId) ? (
+            <LoadingStatusBanner
+              title={
+                uploading
+                  ? "Mengunggah foto kendaraan ke Cloud Storage..."
+                  : editing
+                    ? "Menyimpan perubahan data kendaraan..."
+                    : "Menambahkan unit kendaraan baru ke database..."
+              }
+              description="Memvalidasi plat nomor Sumatera Utara (BK), tarif harian, dan ketersediaan kategori."
+              tone={uploading ? "secondary" : "primary"}
+            />
+          ) : null}
 
           {errorMsg ? (
             <div
@@ -922,10 +977,19 @@ export function VehiclesManager({
                   }}
                   className="inline-flex min-h-[44px] shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border px-3.5 py-2 text-xs font-bold"
                 >
-                  <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {uploading ? (
+                    <LoadingSpinner
+                      size="xs"
+                      tone="secondary"
+                      label="Mengunggah foto"
+                    />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  )}
                   <span>{uploading ? "Mengunggah..." : "Upload Cloud"}</span>
                   <input
                     type="file"
+                    disabled={uploading || loading}
                     accept="image/jpeg,image/png,image/webp,.jfif"
                     onChange={handleFileUpload}
                     className="sr-only"
@@ -976,9 +1040,16 @@ export function VehiclesManager({
                 color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="min-h-[44px] px-4 py-2 text-xs font-semibold"
+              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-xs font-semibold disabled:opacity-65"
             >
-              {loading ? "Menyimpan..." : "Simpan Kendaraan"}
+              {loading && !deletingId ? (
+                <LoadingSpinner
+                  size="xs"
+                  tone="light"
+                  label="Menyimpan kendaraan"
+                />
+              ) : null}
+              <span>{loading && !deletingId ? "Menyimpan..." : "Simpan Kendaraan"}</span>
             </button>
           </div>
         </form>

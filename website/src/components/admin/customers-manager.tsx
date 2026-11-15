@@ -3,6 +3,11 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import {
+  LoadingBar,
+  LoadingSpinner,
+  LoadingStatusBanner,
+} from "@/components/ui/loading";
 import type { UserRecord, UserRole } from "@/lib/types";
 
 export function CustomersManager({
@@ -14,6 +19,7 @@ export function CustomersManager({
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -32,6 +38,9 @@ export function CustomersManager({
     patch: { role?: UserRole; is_active?: boolean },
   ) {
     setLoading(true);
+    setPendingAction(
+      patch.role !== undefined ? `role:${target.id}` : `active:${target.id}`,
+    );
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -59,6 +68,7 @@ export function CustomersManager({
       );
     } finally {
       setLoading(false);
+      setPendingAction(null);
     }
   }
 
@@ -75,6 +85,14 @@ export function CustomersManager({
           Daftar pengguna terautentikasi via Firebase Google Sign-In, histori jumlah pesanan, serta pengelolaan peran (Admin/Customer) dan status aktif akun.
         </p>
       </div>
+
+      {loading ? (
+        <LoadingStatusBanner
+          title="Memperbarui hak akses dan status aktif akun pengguna..."
+          description="Menyinkronkan peran (Admin/Customer) pada database otorisasi."
+          tone="primary"
+        />
+      ) : null}
 
       {feedback ? (
         <div
@@ -143,6 +161,13 @@ export function CustomersManager({
         }}
         className="overflow-hidden border"
       >
+        {loading ? (
+          <LoadingBar
+            tone="primary"
+            height="3px"
+            label="Memperbarui data pelanggan terdaftar"
+          />
+        ) : null}
         <div
           className="overflow-x-auto"
           role="region"
@@ -186,8 +211,18 @@ export function CustomersManager({
                   </td>
                 </tr>
               ) : (
-                filtered.map((u) => (
-                  <tr key={u.id}>
+                filtered.map((u) => {
+                  const isRolePending = pendingAction === `role:${u.id}`;
+                  const isActivePending = pendingAction === `active:${u.id}`;
+                  const isRowBusy = isRolePending || isActivePending;
+                  return (
+                  <tr
+                    key={u.id}
+                    aria-busy={isRowBusy}
+                    className={
+                      isRowBusy ? "opacity-70 transition-opacity" : undefined
+                    }
+                  >
                     <th
                       scope="row"
                       data-label="Nama & Email"
@@ -264,16 +299,26 @@ export function CustomersManager({
                             borderColor: "var(--primary-600)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                         >
-                          <ShieldCheck
-                            className="h-3.5 w-3.5 shrink-0"
-                            aria-hidden="true"
-                          />
+                          {isRolePending ? (
+                            <LoadingSpinner
+                              size="xs"
+                              tone="primary"
+                              label="Memperbarui peran pengguna"
+                            />
+                          ) : (
+                            <ShieldCheck
+                              className="h-3.5 w-3.5 shrink-0"
+                              aria-hidden="true"
+                            />
+                          )}
                           <span>
-                            {u.role === "admin"
-                              ? "Set Customer"
-                              : "Set Admin"}
+                            {isRolePending
+                              ? "Memproses..."
+                              : u.role === "admin"
+                                ? "Set Customer"
+                                : "Set Admin"}
                           </span>
                         </button>
 
@@ -297,30 +342,38 @@ export function CustomersManager({
                               : "var(--secondary-600)",
                             borderRadius: "var(--radius-control)",
                           }}
-                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90"
+                          className="inline-flex min-h-[38px] items-center gap-1.5 border px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-2xs transition-opacity hover:opacity-90 disabled:opacity-65"
                         >
-                          {u.is_active ? (
-                            <>
-                              <UserX
-                                className="h-3.5 w-3.5 shrink-0"
-                                aria-hidden="true"
-                              />
-                              <span>Nonaktifkan</span>
-                            </>
+                          {isActivePending ? (
+                            <LoadingSpinner
+                              size="xs"
+                              tone={u.is_active ? "danger" : "secondary"}
+                              label="Memperbarui status aktif akun"
+                            />
+                          ) : u.is_active ? (
+                            <UserX
+                              className="h-3.5 w-3.5 shrink-0"
+                              aria-hidden="true"
+                            />
                           ) : (
-                            <>
-                              <UserCheck
-                                className="h-3.5 w-3.5 shrink-0"
-                                aria-hidden="true"
-                              />
-                              <span>Aktifkan</span>
-                            </>
+                            <UserCheck
+                              className="h-3.5 w-3.5 shrink-0"
+                              aria-hidden="true"
+                            />
                           )}
+                          <span>
+                            {isActivePending
+                              ? "Memproses..."
+                              : u.is_active
+                                ? "Nonaktifkan"
+                                : "Aktifkan"}
+                          </span>
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

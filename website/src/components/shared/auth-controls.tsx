@@ -17,6 +17,7 @@ import {
   signInWithEmailPasswordClient,
   signInWithGooglePopupClient,
 } from "@/lib/firebase-client";
+import { LoadingSpinner, LoadingStatusBanner } from "@/components/ui/loading";
 import type { UserRecord } from "@/lib/types";
 
 export function AuthControls({
@@ -30,6 +31,9 @@ export function AuthControls({
   const instanceId = React.useId();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [authAction, setAuthAction] = useState<
+    "google" | "email" | "logout" | null
+  >(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -55,6 +59,7 @@ export function AuthControls({
       setErrorMsg(err instanceof Error ? err.message : "Gagal masuk.");
     } finally {
       setLoading(false);
+      setAuthAction(null);
     }
   }
 
@@ -65,12 +70,14 @@ export function AuthControls({
 
   async function handleLiveGooglePopup() {
     setErrorMsg(null);
+    setAuthAction("google");
     setLoading(true);
     try {
       const token = await signInWithGooglePopupClient();
       await completeSessionLogin(token);
     } catch (err) {
       setLoading(false);
+      setAuthAction(null);
       setErrorMsg(getFirebaseAuthErrorMessage(err, "google"));
     }
   }
@@ -81,6 +88,7 @@ export function AuthControls({
       setErrorMsg("Masukkan email yang valid dan kata sandi minimal 6 karakter.");
       return;
     }
+    setAuthAction("email");
     setLoading(true);
     setErrorMsg(null);
 
@@ -98,6 +106,7 @@ export function AuthControls({
         return;
       }
       setLoading(false);
+      setAuthAction(null);
       setErrorMsg(
         "Konfigurasi Firebase Auth belum tersedia pada server produksi.",
       );
@@ -112,17 +121,20 @@ export function AuthControls({
       await completeSessionLogin(token);
     } catch (err) {
       setLoading(false);
+      setAuthAction(null);
       setErrorMsg(getFirebaseAuthErrorMessage(err, "email"));
     }
   }
 
   async function handleLogout() {
+    setAuthAction("logout");
     setLoading(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       router.refresh();
     } finally {
       setLoading(false);
+      setAuthAction(null);
     }
   }
 
@@ -192,10 +204,18 @@ export function AuthControls({
               : "var(--border)",
             borderRadius: "var(--radius-control)",
           }}
-          className="inline-flex min-h-[40px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-semibold transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+          className="inline-flex min-h-[40px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-semibold transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-60"
         >
-          <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>Keluar</span>
+          {authAction === "logout" ? (
+            <LoadingSpinner
+              size="xs"
+              tone={isDark ? "light" : "primary"}
+              label="Keluar dari sesi"
+            />
+          ) : (
+            <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          )}
+          <span>{authAction === "logout" ? "Keluar..." : "Keluar"}</span>
         </button>
       </div>
     );
@@ -215,9 +235,17 @@ export function AuthControls({
             variant === "dark" ? "var(--brand-navy-deep)" : "var(--primary-fg)",
           borderRadius: "var(--radius-control)",
         }}
-        className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold shadow-[var(--shadow-xs)] transition-all hover:opacity-95"
+        className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold shadow-[var(--shadow-xs)] transition-all hover:opacity-95 disabled:opacity-70"
       >
-        <LogIn className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {loading ? (
+          <LoadingSpinner
+            size="xs"
+            tone={variant === "dark" ? "primary" : "light"}
+            label="Memproses autentikasi"
+          />
+        ) : (
+          <LogIn className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        )}
         <span>{loading ? "Memproses..." : "Masuk / Daftar"}</span>
       </button>
 
@@ -259,16 +287,30 @@ export function AuthControls({
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
+              disabled={loading}
               style={{
                 backgroundColor: "var(--bg-subtle)",
                 color: "var(--fg-secondary)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="px-2.5 py-1 text-xs font-bold hover:text-[var(--fg)]"
+              className="px-2.5 py-1 text-xs font-bold hover:text-[var(--fg)] disabled:opacity-50"
             >
               Tutup
             </button>
           </div>
+
+          {loading ? (
+            <LoadingStatusBanner
+              title={
+                authAction === "google"
+                  ? "Memverifikasi autentikasi Google OAuth..."
+                  : "Memverifikasi kredensial dan membuat sesi aman..."
+              }
+              description="Menyinkronkan sesi login lintas domain (/ , /book, /admin)."
+              tone="primary"
+              testId="auth-loading-banner"
+            />
+          ) : null}
 
           {errorMsg ? (
             <div
@@ -295,14 +337,26 @@ export function AuthControls({
               color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-control)",
             }}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-xs font-bold transition-opacity hover:opacity-95"
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-xs font-bold transition-opacity hover:opacity-95 disabled:opacity-60"
           >
-            <LogIn
-              className="h-4 w-4"
-              style={{ color: "var(--accent-500)" }}
-              aria-hidden="true"
-            />
-            <span>Lanjutkan dengan Google OAuth (rentgo-medan)</span>
+            {authAction === "google" ? (
+              <LoadingSpinner
+                size="xs"
+                tone="light"
+                label="Memproses Google OAuth"
+              />
+            ) : (
+              <LogIn
+                className="h-4 w-4"
+                style={{ color: "var(--accent-500)" }}
+                aria-hidden="true"
+              />
+            )}
+            <span>
+              {authAction === "google"
+                ? "Menghubungkan ke Google OAuth..."
+                : "Lanjutkan dengan Google OAuth (rentgo-medan)"}
+            </span>
           </button>
 
           {/* 2. Email & Password Authentication Form */}
@@ -325,11 +379,12 @@ export function AuthControls({
               </span>
               <button
                 type="button"
+                disabled={loading}
                 onClick={() =>
                   setAuthMode((m) => (m === "login" ? "register" : "login"))
                 }
                 style={{ color: "var(--primary)" }}
-                className="text-xs font-bold underline"
+                className="text-xs font-bold underline disabled:opacity-50"
               >
                 {authMode === "login" ? "Daftar Baru" : "Sudah Punya Akun?"}
               </button>
@@ -346,6 +401,7 @@ export function AuthControls({
                 <input
                   id={`${instanceId}-fullname-input`}
                   type="text"
+                  disabled={loading}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Contoh: Budi Santoso"
@@ -353,7 +409,7 @@ export function AuthControls({
                     backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
+                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs disabled:opacity-60"
                 />
               </div>
             ) : null}
@@ -370,6 +426,7 @@ export function AuthControls({
                   id={`${instanceId}-email-input`}
                   type="email"
                   required
+                  disabled={loading}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@gmail.com"
@@ -377,7 +434,7 @@ export function AuthControls({
                     backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
+                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs disabled:opacity-60"
                 />
               </div>
               <div>
@@ -392,6 +449,7 @@ export function AuthControls({
                   type="password"
                   required
                   minLength={6}
+                  disabled={loading}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 karakter"
@@ -399,7 +457,7 @@ export function AuthControls({
                     backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
-                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
+                  className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs disabled:opacity-60"
                 />
               </div>
             </div>
@@ -414,11 +472,23 @@ export function AuthControls({
               }}
               className="flex min-h-[40px] w-full items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold disabled:opacity-50"
             >
-              <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+              {authAction === "email" ? (
+                <LoadingSpinner
+                  size="xs"
+                  tone="light"
+                  label="Memverifikasi email dan kata sandi"
+                />
+              ) : (
+                <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               <span>
-                {authMode === "login"
-                  ? "Masuk dengan Email"
-                  : "Daftar & Masuk Sekarang"}
+                {authAction === "email"
+                  ? authMode === "login"
+                    ? "Memverifikasi Akun..."
+                    : "Mendaftarkan Akun..."
+                  : authMode === "login"
+                    ? "Masuk dengan Email"
+                    : "Daftar & Masuk Sekarang"}
               </span>
             </button>
           </form>

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
+import { LoadingSpinner, LoadingStatusBanner } from "@/components/ui/loading";
 import type { UserRecord } from "@/lib/types";
 
 export function ProfileForm({ user }: { user: UserRecord }) {
@@ -51,6 +52,7 @@ export function ProfileForm({ user }: { user: UserRecord }) {
   return (
     <form
       onSubmit={handleSubmit}
+      aria-busy={saving}
       data-testid="profile-form"
       style={{
         backgroundColor: "var(--surface-white)",
@@ -70,6 +72,15 @@ export function ProfileForm({ user }: { user: UserRecord }) {
           Data Nomor HP dan Nomor SIM A/C wajib diisi satu kali dan akan otomatis digunakan setiap kali Anda melakukan pemesanan armada.
         </p>
       </div>
+
+      {saving ? (
+        <LoadingStatusBanner
+          title="Menyimpan perubahan profil dan identitas SIM..."
+          description="Memperbarui data pelanggan untuk pengisian otomatis formulir sewa."
+          tone="primary"
+          testId="profile-saving-banner"
+        />
+      ) : null}
 
       {feedback ? (
         <div
@@ -174,9 +185,17 @@ export function ProfileForm({ user }: { user: UserRecord }) {
           color: "var(--on-dark-fg)",
           borderRadius: "var(--radius-control)",
         }}
-        className="inline-flex min-h-[44px] items-center gap-2 px-5 py-2.5 text-sm font-semibold"
+        className="inline-flex min-h-[44px] items-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-65"
       >
-        <Save className="h-4 w-4" aria-hidden="true" />
+        {saving ? (
+          <LoadingSpinner
+            size="xs"
+            tone="light"
+            label="Menyimpan perubahan profil"
+          />
+        ) : (
+          <Save className="h-4 w-4" aria-hidden="true" />
+        )}
         <span>{saving ? "Menyimpan..." : "Simpan Perubahan Profil"}</span>
       </button>
     </form>

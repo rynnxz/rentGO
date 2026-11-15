@@ -22,6 +22,7 @@ import {
   BookingStatusBadge,
   PaymentStatusBadge,
 } from "@/components/ui/badge";
+import { LoadingSpinner, LoadingStatusBanner } from "@/components/ui/loading";
 import { PickupMap } from "@/components/shared/pickup-map";
 import type { BookingDetailView } from "@/lib/types";
 
@@ -82,10 +83,13 @@ export function BookingDetailClient({
 }) {
   const router = useRouter();
   const [booking, setBooking] = useState(initialBooking);
-  const [uploading, setUploading] = useState(false);
+  const [simulatingPayment, setSimulatingPayment] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const uploading = simulatingPayment || uploadingProof;
 
   useEffect(() => {
     setBooking(initialBooking);
@@ -115,7 +119,7 @@ export function BookingDetailClient({
   });
 
   async function handleSimulateQrisPaid() {
-    setUploading(true);
+    setSimulatingPayment(true);
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -145,14 +149,14 @@ export function BookingDetailClient({
           : "Gagal memproses simulasi pembayaran QRIS.",
       );
     } finally {
-      setUploading(false);
+      setSimulatingPayment(false);
     }
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingProof(true);
     setErrorMsg(null);
     setFeedback(null);
     try {
@@ -190,7 +194,7 @@ export function BookingDetailClient({
         err instanceof Error ? err.message : "Gagal mengunggah bukti bayar.",
       );
     } finally {
-      setUploading(false);
+      setUploadingProof(false);
     }
   }
 
@@ -232,6 +236,21 @@ export function BookingDetailClient({
           <span>Kembali ke Daftar Pesanan Saya</span>
         </Link>
       </div>
+
+      {uploading || cancelling ? (
+        <LoadingStatusBanner
+          title={
+            cancelling
+              ? "Membatalkan pesanan dan membuka kunci jadwal armada..."
+              : simulatingPayment
+                ? "Memverifikasi penyelesaian pembayaran QRIS Midtrans Sandbox..."
+                : "Mengunggah bukti tangkapan layar QRIS ke Cloud Storage..."
+          }
+          description="Menyinkronkan status pesanan terbaru dengan server operasional Medan."
+          tone={cancelling ? "accent" : "secondary"}
+          testId="booking-detail-loading-banner"
+        />
+      ) : null}
 
       {feedback ? (
         <div
@@ -438,9 +457,17 @@ export function BookingDetailClient({
                   borderColor: "var(--danger)",
                   borderRadius: "var(--radius-control)",
                 }}
-                className="inline-flex min-h-[44px] items-center gap-1.5 border px-4 py-2 text-xs font-semibold"
+                className="inline-flex min-h-[44px] items-center gap-1.5 border px-4 py-2 text-xs font-semibold disabled:opacity-65"
               >
-                <XCircle className="h-4 w-4" aria-hidden="true" />
+                {cancelling ? (
+                  <LoadingSpinner
+                    size="xs"
+                    tone="danger"
+                    label="Membatalkan pesanan"
+                  />
+                ) : (
+                  <XCircle className="h-4 w-4" aria-hidden="true" />
+                )}
                 <span>
                   {cancelling ? "Membatalkan..." : "Batalkan Pesanan Ini"}
                 </span>
@@ -583,7 +610,26 @@ export function BookingDetailClient({
                 </text>
               </svg>
 
-              {isPaid ? (
+              {uploading ? (
+                <div
+                  style={{
+                    backgroundColor: "rgb(11 29 58 / 0.82)",
+                    color: "var(--on-dark-fg)",
+                  }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl p-4 text-center"
+                >
+                  <LoadingSpinner
+                    size="md"
+                    tone="light"
+                    label="Memverifikasi transaksi QRIS"
+                  />
+                  <p className="text-xs font-extrabold uppercase">
+                    {simulatingPayment
+                      ? "Memverifikasi Midtrans QRIS..."
+                      : "Mengunggah Bukti Bayar..."}
+                  </p>
+                </div>
+              ) : isPaid ? (
                 <div
                   style={{
                     backgroundColor: "rgb(20 83 45 / 0.88)",
@@ -635,11 +681,19 @@ export function BookingDetailClient({
                   color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 px-4 py-3 text-sm font-extrabold shadow-sm transition-opacity hover:opacity-95 disabled:opacity-50"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 px-4 py-3 text-sm font-extrabold shadow-sm transition-opacity hover:opacity-95 disabled:opacity-65"
               >
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                {simulatingPayment ? (
+                  <LoadingSpinner
+                    size="xs"
+                    tone="light"
+                    label="Memverifikasi pembayaran Midtrans Sandbox"
+                  />
+                ) : (
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                )}
                 <span>
-                  {uploading
+                  {simulatingPayment
                     ? "Memverifikasi Midtrans Sandbox..."
                     : "Sudah Bayar (Simulasi QRIS Midtrans Sandbox)"}
                 </span>
@@ -655,12 +709,23 @@ export function BookingDetailClient({
                 }}
                 className="flex min-h-[42px] w-full cursor-pointer items-center justify-center gap-2 border px-3 py-2 text-xs font-semibold hover:opacity-90"
               >
-                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+                {uploadingProof ? (
+                  <LoadingSpinner
+                    size="xs"
+                    tone="primary"
+                    label="Mengunggah bukti ke Cloud Storage"
+                  />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
                 <span>
-                  Opsional: Unggah Screenshot Bukti QRIS (Cloud Storage)
+                  {uploadingProof
+                    ? "Mengunggah Bukti ke Cloud Storage..."
+                    : "Opsional: Unggah Screenshot Bukti QRIS (Cloud Storage)"}
                 </span>
                 <input
                   type="file"
+                  disabled={uploading}
                   accept="image/jpeg,image/png,image/webp,image/jfif"
                   onChange={handleFileUpload}
                   className="sr-only"

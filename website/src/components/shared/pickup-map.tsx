@@ -6,7 +6,6 @@ import {
   Clock,
   Compass,
   ExternalLink,
-  Loader2,
   MapPin,
   Navigation
 } from "lucide-react";
@@ -17,16 +16,21 @@ import {
   sortLocationsByDistance,
   type PickupLocationName
 } from "@/lib/locations";
+import { LoadingSpinner } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 
 const PickupMapInner = dynamic(() => import("./pickup-map-inner"), {
   ssr: false,
   loading: () => (
     <div
-      className="flex h-full min-h-[320px] w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-subtle)] text-xs text-[var(--fg-muted)]"
+      className="flex h-full min-h-[320px] w-full flex-col items-center justify-center gap-2.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-subtle)] text-xs text-[var(--fg-muted)]"
       data-testid="pickup-map-skeleton"
     >
-      <Loader2 className="h-5 w-5 animate-spin text-[var(--primary)]" aria-hidden="true" />
+      <LoadingSpinner
+        size="md"
+        tone="primary"
+        label="Memuat peta interaktif OpenStreetMap"
+      />
       <span>Memuat peta interaktif OpenStreetMap...</span>
     </div>
   )
@@ -197,14 +201,20 @@ export function PickupMap({
             className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--fg)] shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-subtle)] hover:text-[var(--primary)] disabled:opacity-60"
           >
             {geoState === "locating" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--primary)]" aria-hidden="true" />
+              <LoadingSpinner
+                size="xs"
+                tone="primary"
+                label="Mendeteksi koordinat GPS"
+              />
             ) : (
               <Navigation className="h-3.5 w-3.5 text-[var(--primary)]" aria-hidden="true" />
             )}
             <span>
-              {geoState === "granted"
-                ? "Perbarui lokasi saya"
-                : "Gunakan lokasi saya"}
+              {geoState === "locating"
+                ? "Mendeteksi GPS..."
+                : geoState === "granted"
+                  ? "Perbarui lokasi saya"
+                  : "Gunakan lokasi saya"}
             </span>
           </button>
 
