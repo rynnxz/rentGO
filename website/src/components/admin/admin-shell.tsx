@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -71,6 +71,7 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() || "/";
+  const drawerId = useId();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   function checkIsActive(href: string) {
@@ -370,6 +371,7 @@ export function AdminShell({
                 onClick={() => setMobileDrawerOpen(true)}
                 data-testid="mobile-hamburger-button"
                 aria-expanded={mobileDrawerOpen}
+                aria-controls={drawerId}
                 aria-label="Toggle Menu Navigasi Admin"
                 style={{
                   backgroundColor: "var(--brand-navy-deep)",
@@ -382,10 +384,12 @@ export function AdminShell({
               </button>
             </div>
           </div>
+        </header>
 
-          {/* Mobile Slide-in Sidebar Drawer (< lg) */}
-          <MobileDrawer
-            open={mobileDrawerOpen}
+        {/* Mobile Slide-in Sidebar Drawer (< lg) */}
+        <MobileDrawer
+          id={drawerId}
+          open={mobileDrawerOpen}
             onClose={() => setMobileDrawerOpen(false)}
             titleLabel="Menu Navigasi Administrator"
             surfaceLabel="Admin Panel"
@@ -457,7 +461,6 @@ export function AdminShell({
               })}
             </nav>
           </MobileDrawer>
-        </header>
 
         <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">{children}</div>

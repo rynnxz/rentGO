@@ -248,16 +248,61 @@ test.describe("RentGo Medan E2E Verification Suite", () => {
       toggledTheme || "dark",
     );
 
-    // 3. Verify 320px mobile viewport: Hamburger drawer opens & closes on Esc key
+    // 3. Verify 320px mobile viewport: Hamburger drawer opens at full viewport height (not trapped inside sticky <header>) & closes on Esc key across Landing, Book, and Admin
     await page.setViewportSize({ width: 320, height: 640 });
-    const hamburgerBtn = page.getByTestId("mobile-hamburger-button").first();
-    await expect(hamburgerBtn).toBeVisible();
-    await hamburgerBtn.click();
 
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await expect(drawer).toBeVisible();
+    const assertMobileDrawerFullViewport = async (
+      url: string,
+      readyTestId?: string,
+    ) => {
+      await page.goto(url, { waitUntil: "networkidle" });
+      if (readyTestId) {
+        await expect(page.getByTestId(readyTestId)).toBeVisible();
+      }
+      const hamburgerBtn = page.getByTestId("mobile-hamburger-button").first();
+      await expect(hamburgerBtn).toBeVisible();
+      await hamburgerBtn.click();
 
-    await page.keyboard.press("Escape");
-    await expect(drawer).toHaveCount(0);
+      const drawer = page.getByTestId("mobile-nav-drawer");
+      await expect(drawer).toBeVisible();
+
+      const drawerBox = await drawer.boundingBox();
+      expect(drawerBox).not.toBeNull();
+      expect(drawerBox!.height).toBeGreaterThanOrEqual(639);
+      expect(drawerBox!.width).toBeGreaterThanOrEqual(319);
+
+      const closeBtn = page.getByTestId("mobile-drawer-close");
+      const closeBox = await closeBtn.boundingBox();
+      expect(closeBox).not.toBeNull();
+      expect(closeBox!.y).toBeGreaterThanOrEqual(0);
+
+      // Verify drawer is NOT nested inside <header>
+      const isInsideHeader = await drawer.evaluate((el) =>
+        Boolean(el.closest("header")),
+      );
+      expect(isInsideHeader).toBe(false);
+
+      await page.keyboard.press("Escape");
+      await expect(drawer).toHaveCount(0);
+    };
+
+    await assertMobileDrawerFullViewport("/", "landing-surface-view");
+    await assertMobileDrawerFullViewport("/book", "book-catalog-view");
+    await assertMobileDrawerFullViewport("/book/bookings");
+    await assertMobileDrawerFullViewport("/book/profile");
+
+    // Verify Admin surface mobile drawer if emulator admin login is enabled in this env
+    await page.goto("/admin", { waitUntil: "networkidle" });
+    if (await page.getByTestId("admin-login-gate").isVisible()) {
+      await page.getByTestId("login-google-button").first().click();
+      await page.getByTestId("emulator-login-admin").first().click();
+      await page
+        .getByTestId("admin-dashboard-view")
+        .waitFor({ state: "visible", timeout: 5000 })
+        .catch(() => {});
+    }
+    if (await page.getByTestId("admin-dashboard-view").isVisible()) {
+      await assertMobileDrawerFullViewport("/admin", "admin-dashboard-view");
+    }
   });
 });

@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { RentGoLogo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 export interface MobileDrawerProps {
+  id?: string;
   open: boolean;
   onClose: () => void;
   titleLabel: string;
@@ -16,6 +18,7 @@ export interface MobileDrawerProps {
 }
 
 export function MobileDrawer({
+  id,
   open,
   onClose,
   titleLabel,
@@ -24,81 +27,102 @@ export function MobileDrawer({
   footer,
 }: MobileDrawerProps) {
   const pathname = usePathname();
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const prevPathnameRef = useRef(pathname);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Auto-close on route change
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
       if (open) {
-        onClose();
+        onCloseRef.current();
       }
     }
-  }, [pathname, open, onClose]);
+  }, [pathname, open]);
 
-  // Esc key + Focus Trap + Body scroll lock
+  // Top-layer modal dialog lifecycle, Escape handling, scroll lock, and desktop resize auto-close
   useEffect(() => {
     if (!open) return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    if (mediaQuery.matches) {
+      onCloseRef.current();
+      return;
+    }
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+
     const focusTimer = window.setTimeout(() => {
       closeButtonRef.current?.focus();
     }, 10);
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && panelRef.current) {
-        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+    function handleMediaChange(e: MediaQueryListEvent) {
+      if (e.matches) {
+        onCloseRef.current();
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    mediaQuery.addEventListener("change", handleMediaChange);
+
     return () => {
       window.clearTimeout(focusTimer);
-      document.removeEventListener("keydown", handleKeyDown);
+      mediaQuery.removeEventListener("change", handleMediaChange);
+      if (dialog.open) {
+        dialog.close();
+      }
       document.body.style.overflow = prevOverflow;
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 lg:hidden"
-      role="dialog"
-      aria-modal="true"
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      id={id}
       aria-label={titleLabel}
       data-testid="mobile-nav-drawer"
+      onCancel={(e) => {
+        e.preventDefault();
+        onCloseRef.current();
+      }}
+      onClick={(e) => {
+        if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+          onCloseRef.current();
+        }
+      }}
+      style={{
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        maxWidth: "none",
+        maxHeight: "none",
+        margin: 0,
+        padding: 0,
+        background: "transparent",
+        border: 0,
+        overflow: "hidden",
+      }}
+      className="mobile-drawer-dialog fixed inset-0 z-50 lg:hidden"
     >
       {/* Backdrop */}
       <div
         data-testid="mobile-drawer-backdrop"
-        onClick={onClose}
+        onClick={() => onCloseRef.current()}
         aria-hidden="true"
         className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
       />
@@ -112,7 +136,7 @@ export function MobileDrawer({
           borderColor: "var(--border)",
           boxShadow: "var(--shadow-elevated)",
         }}
-        className="fixed inset-y-0 right-0 z-10 flex w-[min(88vw,340px)] flex-col justify-between border-l p-5 overflow-y-auto"
+        className="fixed inset-y-0 right-0 z-10 flex h-dvh w-[min(88vw,340px)] flex-col justify-between overflow-y-auto overscroll-contain border-l p-5"
       >
         <div className="space-y-5">
           <div className="flex items-center justify-between gap-2 border-b pb-4">
@@ -122,7 +146,8 @@ export function MobileDrawer({
               <button
                 ref={closeButtonRef}
                 type="button"
-                onClick={onClose}
+                autoFocus
+                onClick={() => onCloseRef.current()}
                 data-testid="mobile-drawer-close"
                 aria-label="Tutup menu navigasi"
                 style={{
@@ -144,6 +169,7 @@ export function MobileDrawer({
           <div className="mt-6 border-t pt-4">{footer}</div>
         ) : null}
       </div>
-    </div>
+    </dialog>,
+    document.body
   );
 }

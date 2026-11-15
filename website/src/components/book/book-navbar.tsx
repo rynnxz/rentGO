@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -27,6 +27,7 @@ export function BookNavbar({
   adminUrl: string;
 }) {
   const pathname = usePathname() || "/";
+  const drawerId = useId();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navItems = [
@@ -60,7 +61,8 @@ export function BookNavbar({
   }
 
   return (
-    <header className="sticky-glass-header sticky top-0 z-40 shadow-[var(--shadow-xs)]">
+    <>
+      <header className="sticky-glass-header sticky top-0 z-40 shadow-[var(--shadow-xs)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex shrink-0 items-center gap-4 lg:gap-5">
           <Link href="/book" className="inline-flex shrink-0 items-center">
@@ -142,6 +144,7 @@ export function BookNavbar({
             data-testid="mobile-hamburger-button"
             aria-label="Buka menu navigasi"
             aria-expanded={drawerOpen}
+            aria-controls={drawerId}
             style={{
               backgroundColor: "var(--surface-elevated)",
               color: "var(--fg)",
@@ -154,10 +157,12 @@ export function BookNavbar({
           </button>
         </div>
       </div>
+    </header>
 
-      {/* Slide-in Drawer (< lg) */}
-      <MobileDrawer
-        open={drawerOpen}
+    {/* Slide-in Drawer (< lg) */}
+    <MobileDrawer
+      id={drawerId}
+      open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         titleLabel="Menu Navigasi Aplikasi Booking"
         surfaceLabel="Booking App"
@@ -229,6 +234,6 @@ export function BookNavbar({
           })}
         </nav>
       </MobileDrawer>
-    </header>
+    </>
   );
 }

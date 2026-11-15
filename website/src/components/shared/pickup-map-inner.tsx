@@ -179,7 +179,7 @@ export default function PickupMapInner({
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden rounded-[var(--radius-lg)]"
+      className="relative isolate h-full w-full overflow-hidden rounded-[var(--radius-lg)]"
       data-testid="leaflet-map-canvas"
       data-map-theme={isDarkTheme ? "dark" : "light"}
     >

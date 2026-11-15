@@ -91,6 +91,11 @@
     overflow: hidden;
     overscroll-behavior: contain;
   }
+
+  dialog.mobile-drawer-dialog::backdrop {
+    background: transparent;
+    backdrop-filter: none;
+  }
 }
 
 /* Sticky glass navbar utility (capped to navbar only per R-10) */
