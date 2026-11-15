@@ -22,6 +22,7 @@ import {
   BookingStatusBadge,
   PaymentStatusBadge,
 } from "@/components/ui/badge";
+import { PickupMap } from "@/components/shared/pickup-map";
 import type { BookingDetailView } from "@/lib/types";
 
 /**
@@ -398,6 +399,28 @@ export function BookingDetailClient({
               <p className="mt-1">{booking.admin_notes}</p>
             </div>
           ) : null}
+
+          <div
+            data-testid="booking-detail-map-block"
+            className="space-y-3 border-t pt-4"
+          >
+            <div>
+              <h3
+                style={{ color: "var(--navy-900)" }}
+                className="text-sm font-bold"
+              >
+                Peta Lokasi Pengambilan & Pengembalian
+              </h3>
+              <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                Titik Ambil: <strong className="text-[var(--fg)]">{booking.pickup_location}</strong> · Titik Kembali: <strong className="text-[var(--fg)]">{booking.return_location}</strong>
+              </p>
+            </div>
+            <PickupMap
+              pickupLocationName={booking.pickup_location}
+              returnLocationName={booking.return_location}
+              compact
+            />
+          </div>
 
           {booking.status === "pending" ? (
             <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">

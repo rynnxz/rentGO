@@ -1,6 +1,11 @@
 import { TZDate } from "@date-fns/tz";
+import { clsx, type ClassValue } from "clsx";
 import { addDays, format, parseISO } from "date-fns";
 import type { SurfaceName } from "./types";
+
+export function cn(...inputs: ClassValue[]): string {
+  return clsx(inputs);
+}
 
 export const WIB_TIMEZONE = "Asia/Jakarta";
 

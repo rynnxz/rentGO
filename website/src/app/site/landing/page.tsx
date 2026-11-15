@@ -24,6 +24,7 @@ import {
 } from "@/lib/utils";
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
+import { PickupMap } from "@/components/shared/pickup-map";
 
 export const dynamic = "force-dynamic";
 
@@ -123,6 +124,13 @@ export default async function LandingSurfacePage() {
               className="inline-flex min-h-[40px] items-center hover:underline"
             >
               Transparansi Tarif
+            </a>
+            <a
+              href="#lokasi"
+              style={{ color: "var(--slate-600)" }}
+              className="inline-flex min-h-[40px] items-center hover:underline"
+            >
+              Lokasi
             </a>
             <a
               href="#faq"
@@ -997,6 +1005,38 @@ export default async function LandingSurfacePage() {
               </table>
             </div>
           </div>
+        </section>
+
+        {/* 6B. Lokasi Pengambilan & Pengembalian Armada */}
+        <section
+          id="lokasi"
+          aria-labelledby="locations-heading"
+          className="mx-auto max-w-7xl px-4 py-14 sm:px-6"
+        >
+          <div className="mb-8 max-w-2xl space-y-2">
+            <span
+              style={{
+                backgroundColor: "var(--secondary-50)",
+                color: "var(--secondary-700)",
+                borderRadius: "var(--radius-badge)",
+              }}
+              className="inline-block px-2.5 py-1 text-xs font-bold uppercase"
+            >
+              Titik Serah-Terima Resmi
+            </span>
+            <h2
+              id="locations-heading"
+              style={{ color: "var(--navy-900)" }}
+              className="text-2xl font-extrabold sm:text-3xl"
+            >
+              Lokasi Pengambilan & Pengembalian Armada di Medan
+            </h2>
+            <p style={{ color: "var(--slate-600)" }} className="text-sm">
+              Pilih titik temu paling strategis di Bandara Internasional Kualanamu, Stasiun Kereta Api Medan, atau Kantor Operasional RentGo Medan. Gunakan fitur deteksi lokasi untuk menemukan titik terdekat dari posisi Anda.
+            </p>
+          </div>
+
+          <PickupMap />
         </section>
 
         {/* 7. FAQ (Frequently Asked Questions) */}

@@ -18,7 +18,9 @@ import {
   formatRupiah,
   PICKUP_LOCATIONS,
 } from "@/lib/utils";
+import { getLocationByName } from "@/lib/locations";
 import { AuthControls } from "@/components/shared/auth-controls";
+import { PickupMap } from "@/components/shared/pickup-map";
 import type {
   PaymentMethod,
   UserRecord,
@@ -319,6 +321,38 @@ export function VehicleCheckoutView({
               </ul>
             )}
           </section>
+
+          {/* Interactive Pickup & Return Map (Two-way Synced with Checkout Form) */}
+          <section
+            aria-labelledby="checkout-map-heading"
+            style={{
+              backgroundColor: "var(--surface-white)",
+              borderRadius: "var(--radius-card)",
+              boxShadow: "var(--shadow-card)",
+            }}
+            className="space-y-4 border p-6"
+          >
+            <div>
+              <h2
+                id="checkout-map-heading"
+                style={{ color: "var(--navy-900)" }}
+                className="text-base font-bold"
+              >
+                Peta Titik Pengambilan & Pengembalian Armada
+              </h2>
+              <p style={{ color: "var(--slate-600)" }} className="text-xs">
+                Klik pin atau kartu lokasi untuk menyinkronkan pilihan titik ambil/kembali secara langsung dengan formulir checkout.
+              </p>
+            </div>
+
+            <PickupMap
+              pickupLocationName={pickupLocation}
+              returnLocationName={returnLocation}
+              onPickupLocationChange={(loc) => setPickupLocation(loc)}
+              onReturnLocationChange={(loc) => setReturnLocation(loc)}
+              compact
+            />
+          </section>
         </div>
 
         {/* Right Column: Price Calculator & Checkout Form */}
@@ -504,6 +538,25 @@ export function VehicleCheckoutView({
                     </select>
                   </div>
                 </div>
+
+                {(() => {
+                  const selectedPickupInfo = getLocationByName(pickupLocation);
+                  if (!selectedPickupInfo) return null;
+                  return (
+                    <div
+                      data-testid="checkout-selected-location-summary"
+                      className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-xs text-[var(--fg-secondary)]"
+                    >
+                      <span className="font-semibold text-[var(--fg)]">
+                        Titik Ambil ({selectedPickupInfo.name}):
+                      </span>{" "}
+                      {selectedPickupInfo.address} · Jam layanan{" "}
+                      <span className="font-medium text-[var(--fg)]">
+                        {selectedPickupInfo.operatingHours}
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
