@@ -62,7 +62,7 @@ export default async function CustomerBookingsListPage() {
           href="/book"
           style={{
             backgroundColor: "var(--primary-600)",
-            color: "var(--surface-white)",
+            color: "var(--on-dark-fg)",
             borderRadius: "var(--radius-control)",
           }}
           className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-xs font-semibold sm:text-sm"
@@ -94,7 +94,7 @@ export default async function CustomerBookingsListPage() {
             href="/book"
             style={{
               backgroundColor: "var(--primary-600)",
-              color: "var(--surface-white)",
+              color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-control)",
             }}
             className="mt-4 inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-semibold"
@@ -180,7 +180,7 @@ export default async function CustomerBookingsListPage() {
                   data-testid={`open-booking-detail-${b.booking_code}`}
                   style={{
                     backgroundColor: "var(--primary-600)",
-                    color: "var(--surface-white)",
+                    color: "var(--on-dark-fg)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="inline-flex min-h-[44px] items-center gap-1.5 px-4 py-2 text-xs font-semibold"

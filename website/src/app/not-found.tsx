@@ -29,7 +29,7 @@ export default function NotFound() {
             href="/"
             style={{
               backgroundColor: "var(--primary-600)",
-              color: "var(--surface-white)",
+              color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-control)",
             }}
             className="inline-flex min-h-[44px] items-center px-5 py-2.5 text-sm font-semibold"

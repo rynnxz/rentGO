@@ -4,11 +4,39 @@
    1. Triad I  (Dominant / Primary - 60%) : Royal Cobalt & Midnight Navy (~220 deg)
    2. Triad II (Secondary / Trust - 30%)  : Emerald-Teal Jade (~160 deg)
    3. Triad III (Accent / Action - 10%)   : Warm Road Amber-Gold (~38 deg)
-   Seluruh pasangan teks dan latar belakang memenuhi standar kontras WCAG AA (>= 4.5:1).
+   Seluruh pasangan teks dan latar belakang memenuhi standar kontras WCAG AA (>= 4.5:1)
+   baik pada tema Terang (:root / [data-theme="light"]) maupun Gelap ([data-theme="dark"]).
    ============================================================================ */
 
-:root {
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Invariant Brand Anchors (untuk hero gelap, sidebar gelap, dan tombol aksen) */
+  --brand-navy-deep: #0B1D3A;
+  --brand-navy-mid: #132C54;
+  --brand-cobalt-deep: #1E3A8A;
+  --on-dark-fg: #F8FAFC;
+  --on-amber-fg: #0B1D3A;
+
+  /* Core Semantic Surface & Typography Tokens (Light) */
+  --bg: #F8FAFC;
+  --bg-subtle: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-glass: rgb(255 255 255 / 0.84);
+  --fg: #0F172A;
+  --fg-secondary: #475569;
+  --fg-muted: #64748B;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+
   /* Triad I: Primary Cobalt Blue & Midnight Navy (~220 deg) */
+  --primary: #1D4ED8;
+  --primary-hover: #1E40AF;
+  --primary-fg: #FFFFFF;
+  --primary-subtle: #EFF6FF;
+
   --navy-900: #0B1D3A;
   --navy-800: #132C54;
   --primary-700: #1E3A8A;
@@ -17,27 +45,35 @@
   --primary-50: #EFF6FF;
 
   /* Triad II: Secondary Emerald-Teal Jade (~160 deg) */
+  --secondary: #0D9488;
+  --secondary-hover: #0F766E;
+  --secondary-subtle: #F0FDFA;
+
   --secondary-700: #0F766E;
   --secondary-600: #0D9488;
   --secondary-100: #CCFBF1;
   --secondary-50: #F0FDFA;
 
   /* Triad III: Accent Warm Road Amber-Gold (~38 deg) */
+  --accent: #D97706;
+  --accent-hover: #B45309;
+  --accent-subtle: #FFFBEB;
+
   --accent-500: #F59E0B;
   --accent-600: #B45309;
   --accent-100: #FEF3C7;
   --accent-50: #FFFBEB;
 
-  /* Neutral Slate Scale */
+  /* Adaptive Neutral Scale */
   --slate-50: #F8FAFC;
   --slate-100: #F1F5F9;
   --slate-200: #E2E8F0;
-  --slate-400: #94A3B8;
+  --slate-400: #64748B;
   --slate-600: #475569;
   --slate-900: #0F172A;
   --surface-white: #FFFFFF;
 
-  /* Semantic Feedback Colors (WCAG AA Verified Pairings) */
+  /* Semantic Feedback Colors (WCAG AA Verified Pairings - Light) */
   --success: #15803D;
   --success-bg: #DCFCE7;
   --success-text: #14532D;
@@ -54,11 +90,109 @@
   --warning-bg: #FEF3C7;
   --warning-text: #78350F;
 
-  /* Geometry & Elevation Tokens */
-  --radius-card: 12px;
-  --radius-control: 8px;
-  --radius-badge: 6px;
+  /* Geometry & Layered Elevation Tokens */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-badge: 9999px;
+
+  --shadow-xs: 0 1px 2px 0 rgb(11 29 58 / 0.05);
+  --shadow-sm: 0 2px 6px -1px rgb(11 29 58 / 0.07), 0 1px 2px -1px rgb(11 29 58 / 0.04);
+  --shadow-md: 0 8px 20px -4px rgb(11 29 58 / 0.1), 0 2px 6px -2px rgb(11 29 58 / 0.05);
   --shadow-subtle: 0 1px 2px 0 rgb(11 29 58 / 0.06);
-  --shadow-card: 0 2px 8px -2px rgb(11 29 58 / 0.08), 0 1px 3px -1px rgb(11 29 58 / 0.05);
-  --shadow-elevated: 0 12px 28px -6px rgb(11 29 58 / 0.14), 0 4px 10px -4px rgb(11 29 58 / 0.07);
+  --shadow-card: 0 4px 14px -3px rgb(11 29 58 / 0.07), 0 2px 4px -2px rgb(11 29 58 / 0.04);
+  --shadow-elevated: 0 16px 32px -8px rgb(11 29 58 / 0.14), 0 4px 12px -4px rgb(11 29 58 / 0.06);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Invariant Brand Anchors */
+  --brand-navy-deep: #071124;
+  --brand-navy-mid: #0E2140;
+  --brand-cobalt-deep: #17316E;
+  --on-dark-fg: #F8FAFC;
+  --on-amber-fg: #0B1D3A;
+
+  /* Core Semantic Surface & Typography Tokens (Dark - WCAG AA Verified) */
+  --bg: #0B1120;
+  --bg-subtle: #111C2D;
+  --surface: #132034;
+  --surface-elevated: #17253B;
+  --surface-glass: rgb(15 23 42 / 0.84);
+  --fg: #F8FAFC;
+  --fg-secondary: #CBD5E1;
+  --fg-muted: #94A3B8;
+  --border: #243552;
+  --border-strong: #334A6E;
+
+  /* Triad I: Primary Cobalt Blue (Dark Adapted) */
+  --primary: #3B82F6;
+  --primary-hover: #2563EB;
+  --primary-fg: #FFFFFF;
+  --primary-subtle: #172A4A;
+
+  --navy-900: #F8FAFC;
+  --navy-800: #1E293B;
+  --primary-700: #93C5FD;
+  --primary-600: #2563EB;
+  --primary-100: #1E3A66;
+  --primary-50: #172A4A;
+
+  /* Triad II: Secondary Emerald-Teal Jade (Dark Adapted) */
+  --secondary: #14B8A6;
+  --secondary-hover: #0D9488;
+  --secondary-subtle: #0D2D2B;
+
+  --secondary-700: #5EEAD4;
+  --secondary-600: #0D9488;
+  --secondary-100: #134E4A;
+  --secondary-50: #0D2D2B;
+
+  /* Triad III: Accent Warm Road Amber-Gold (Dark Adapted) */
+  --accent: #F59E0B;
+  --accent-hover: #D97706;
+  --accent-subtle: #2E210B;
+
+  --accent-500: #F59E0B;
+  --accent-600: #FBBF24;
+  --accent-100: #452F0D;
+  --accent-50: #2E210B;
+
+  /* Adaptive Neutral Scale (Dark) */
+  --slate-50: #0B1120;
+  --slate-100: #111C2D;
+  --slate-200: #243552;
+  --slate-400: #94A3B8;
+  --slate-600: #CBD5E1;
+  --slate-900: #F8FAFC;
+  --surface-white: #17253B;
+
+  /* Semantic Feedback Colors (WCAG AA Verified Pairings - Dark) */
+  --success: #22C55E;
+  --success-bg: #0D2E1E;
+  --success-text: #86EFAC;
+
+  --danger: #EF4444;
+  --danger-bg: #351319;
+  --danger-text: #FCA5A5;
+
+  --info: #14B8A6;
+  --info-bg: #0D2D2B;
+  --info-text: #5EEAD4;
+
+  --warning: #F59E0B;
+  --warning-bg: #2E210B;
+  --warning-text: #FCD34D;
+
+  /* Layered Dark Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(2 6 23 / 0.45);
+  --shadow-sm: 0 2px 6px -1px rgb(2 6 23 / 0.55), 0 1px 3px -1px rgb(2 6 23 / 0.4);
+  --shadow-md: 0 10px 24px -4px rgb(2 6 23 / 0.65), 0 4px 8px -2px rgb(2 6 23 / 0.45);
+  --shadow-subtle: 0 1px 3px 0 rgb(2 6 23 / 0.5);
+  --shadow-card: 0 6px 18px -4px rgb(2 6 23 / 0.6), 0 2px 6px -2px rgb(2 6 23 / 0.45);
+  --shadow-elevated: 0 20px 38px -10px rgb(2 6 23 / 0.75), 0 6px 14px -4px rgb(2 6 23 / 0.55);
 }

@@ -145,8 +145,8 @@ export function CatalogView({
       <section
         aria-labelledby="catalog-search-heading"
         style={{
-          backgroundColor: "var(--navy-900)",
-          color: "var(--surface-white)",
+          backgroundColor: "var(--brand-navy-deep)",
+          color: "var(--on-dark-fg)",
           borderRadius: "var(--radius-card)",
           boxShadow: "var(--shadow-elevated)",
         }}
@@ -156,7 +156,7 @@ export function CatalogView({
           <span
             style={{
               backgroundColor: "var(--accent-500)",
-              color: "var(--navy-900)",
+              color: "var(--on-amber-fg)",
               borderRadius: "var(--radius-badge)",
             }}
             className="inline-block px-2.5 py-1 text-xs font-bold uppercase"
@@ -491,7 +491,7 @@ export function CatalogView({
                 data-testid="ai-submit-button"
                 style={{
                   backgroundColor: "var(--primary-600)",
-                  color: "var(--surface-white)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 px-5 py-2 text-sm font-semibold disabled:opacity-50"
@@ -569,7 +569,7 @@ export function CatalogView({
                             <span
                               style={{
                                 backgroundColor: "var(--accent-500)",
-                                color: "var(--navy-900)",
+                                color: "var(--on-amber-fg)",
                                 borderRadius: "var(--radius-badge)",
                               }}
                               className="px-2 py-0.5 text-xs font-bold"
@@ -628,7 +628,7 @@ export function CatalogView({
                             href={`/book/vehicles/${v.id}?start=${startDate}&end=${endDate}`}
                             style={{
                               backgroundColor: "var(--primary-600)",
-                              color: "var(--surface-white)",
+                              color: "var(--on-dark-fg)",
                               borderRadius: "var(--radius-control)",
                             }}
                             className="inline-flex min-h-[40px] items-center px-3 py-1.5 text-xs font-semibold"
@@ -694,7 +694,7 @@ export function CatalogView({
               }}
               style={{
                 backgroundColor: "var(--primary-600)",
-                color: "var(--surface-white)",
+                color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="mt-4 inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-semibold"
@@ -731,8 +731,8 @@ export function CatalogView({
                       />
                       <span
                         style={{
-                          backgroundColor: "var(--navy-900)",
-                          color: "var(--surface-white)",
+                          backgroundColor: "var(--brand-navy-deep)",
+                          color: "var(--on-dark-fg)",
                           borderRadius: "var(--radius-badge)",
                         }}
                         className="absolute left-3 top-3 px-2.5 py-1 text-[11px] font-semibold"
@@ -847,7 +847,7 @@ export function CatalogView({
                       data-testid={`select-vehicle-${v.plate_number}`}
                       style={{
                         backgroundColor: "var(--primary-600)",
-                        color: "var(--surface-white)",
+                        color: "var(--on-dark-fg)",
                         borderRadius: "var(--radius-control)",
                       }}
                       className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-semibold transition-opacity hover:opacity-95"

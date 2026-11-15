@@ -24,12 +24,12 @@ export function RentGoLogo({
       >
         <span
           style={{
-            backgroundColor: isDark ? "var(--surface-white)" : "var(--primary-600)",
+            backgroundColor: isDark ? "var(--on-dark-fg)" : "var(--primary)",
           }}
           className="h-6 w-1.5 -skew-x-16 rounded-[2px]"
         />
         <span
-          style={{ backgroundColor: "var(--secondary-600)" }}
+          style={{ backgroundColor: "var(--secondary)" }}
           className="h-5 w-1.5 -skew-x-16 rounded-[2px]"
         />
         <span
@@ -38,12 +38,12 @@ export function RentGoLogo({
         />
       </span>
 
-      {/* Pure Editorial Typography Wordmark */}
+      {/* Pure Editorial Typography Wordmark: RENTGO. MDN */}
       <div className="flex flex-col leading-none">
         <div className="flex items-baseline tracking-tighter">
           <span
             style={{
-              color: isDark ? "var(--surface-white)" : "var(--navy-900)",
+              color: isDark ? "var(--on-dark-fg)" : "var(--fg)",
             }}
             className="text-xl font-black uppercase sm:text-2xl"
           >
@@ -51,14 +51,14 @@ export function RentGoLogo({
           </span>
           <span
             style={{
-              color: isDark ? "var(--accent-500)" : "var(--primary-600)",
+              color: isDark ? "var(--accent-500)" : "var(--primary)",
             }}
             className="text-xl font-black italic uppercase sm:text-2xl"
           >
             GO
           </span>
           <span
-            style={{ color: "var(--secondary-600)" }}
+            style={{ color: "var(--secondary)" }}
             className="ml-0.5 text-2xl font-black leading-none"
             aria-hidden="true"
           >
@@ -68,13 +68,13 @@ export function RentGoLogo({
             style={{
               backgroundColor: isDark
                 ? "rgb(255 255 255 / 0.14)"
-                : "var(--slate-100)",
-              color: isDark ? "var(--surface-white)" : "var(--slate-600)",
+                : "var(--bg-subtle)",
+              color: isDark ? "var(--on-dark-fg)" : "var(--fg-secondary)",
               borderColor: isDark
-                ? "rgb(255 255 255 / 0.2)"
-                : "var(--slate-200)",
+                ? "rgb(255 255 255 / 0.22)"
+                : "var(--border)",
             }}
-            className="ml-2 hidden rounded border px-1.5 py-0.5 font-mono text-[9px] font-extrabold tracking-widest uppercase sm:inline-block"
+            className="ml-2 rounded border px-1.5 py-0.5 font-mono text-[9px] font-extrabold tracking-widest uppercase"
           >
             MDN
           </span>
@@ -83,9 +83,9 @@ export function RentGoLogo({
         {label ? (
           <span
             style={{
-              color: isDark ? "var(--secondary-100)" : "var(--secondary-700)",
+              color: isDark ? "#CCFBF1" : "var(--secondary-700)",
             }}
-            className="mt-0.5 font-mono text-[9px] font-bold tracking-[0.18em] uppercase"
+            className="mt-0.5 font-mono text-[9px] font-bold tracking-[0.16em] uppercase"
           >
             {label}
           </span>

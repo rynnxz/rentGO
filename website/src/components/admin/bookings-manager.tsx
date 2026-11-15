@@ -463,7 +463,7 @@ export function BookingsManager({
                               data-testid={`transition-${b.booking_code}-${primaryNext.status}`}
                               style={{
                                 backgroundColor: "var(--primary-600)",
-                                color: "var(--surface-white)",
+                                color: "var(--on-dark-fg)",
                                 borderColor: "var(--primary-700)",
                                 borderRadius: "var(--radius-control)",
                               }}
@@ -479,8 +479,8 @@ export function BookingsManager({
                             onClick={() => openDetail(b)}
                             data-testid={`open-actions-${b.booking_code}`}
                             style={{
-                              backgroundColor: "var(--navy-900)",
-                              color: "var(--surface-white)",
+                              backgroundColor: "var(--brand-navy-deep)",
+                              color: "var(--on-dark-fg)",
                               borderColor: "var(--navy-800)",
                               borderRadius: "var(--radius-control)",
                             }}
@@ -528,8 +528,8 @@ export function BookingsManager({
             {/* Modal Sticky Header */}
             <div
               style={{
-                backgroundColor: "var(--navy-900)",
-                color: "var(--surface-white)",
+                backgroundColor: "var(--brand-navy-deep)",
+                color: "var(--on-dark-fg)",
               }}
               className="flex items-start justify-between gap-3 border-b px-6 py-4"
             >
@@ -538,7 +538,7 @@ export function BookingsManager({
                     <span
                       style={{
                         backgroundColor: "var(--accent-500)",
-                        color: "var(--navy-900)",
+                        color: "var(--on-amber-fg)",
                         borderRadius: "var(--radius-badge)",
                       }}
                       className="px-2 py-0.5 text-[10px] font-extrabold uppercase"
@@ -567,7 +567,7 @@ export function BookingsManager({
                 aria-label="Tutup Modal"
                 style={{
                   backgroundColor: "rgb(255 255 255 / 0.12)",
-                  color: "var(--surface-white)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex h-9 w-9 items-center justify-center hover:bg-white/20"

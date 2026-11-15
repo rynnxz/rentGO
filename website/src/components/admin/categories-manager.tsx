@@ -139,7 +139,7 @@ export function CategoriesManager({
           data-testid="add-category-button"
           style={{
             backgroundColor: "var(--primary-600)",
-            color: "var(--surface-white)",
+            color: "var(--on-dark-fg)",
             borderRadius: "var(--radius-control)",
           }}
           className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-sm font-semibold"
@@ -324,8 +324,8 @@ export function CategoriesManager({
         <form onSubmit={handleSave}>
           <div
             style={{
-              backgroundColor: "var(--navy-900)",
-              color: "var(--surface-white)",
+              backgroundColor: "var(--brand-navy-deep)",
+              color: "var(--on-dark-fg)",
             }}
             className="flex items-center justify-between gap-3 border-b px-6 py-4"
           >
@@ -333,7 +333,7 @@ export function CategoriesManager({
               <span
                 style={{
                   backgroundColor: "var(--accent-500)",
-                  color: "var(--navy-900)",
+                  color: "var(--on-amber-fg)",
                   borderRadius: "var(--radius-badge)",
                 }}
                 className="inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase"
@@ -352,7 +352,7 @@ export function CategoriesManager({
               onClick={() => dialogRef.current?.close()}
               style={{
                 backgroundColor: "rgb(255 255 255 / 0.14)",
-                color: "var(--surface-white)",
+                color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="px-3 py-1.5 text-xs font-bold hover:bg-white/20"
@@ -461,7 +461,7 @@ export function CategoriesManager({
               disabled={loading}
               style={{
                 backgroundColor: "var(--primary-600)",
-                color: "var(--surface-white)",
+                color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="min-h-[44px] px-4 py-2 text-xs font-semibold"

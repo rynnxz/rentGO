@@ -25,6 +25,7 @@ import {
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
 import { PickupMap } from "@/components/shared/pickup-map";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -142,12 +143,13 @@ export default async function LandingSurfacePage() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+            <ThemeToggle />
             {user?.role === "admin" ? (
               <a
                 href={adminUrl}
                 style={{
-                  backgroundColor: "var(--navy-900)",
-                  color: "var(--surface-white)",
+                  backgroundColor: "var(--brand-navy-deep)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="hidden min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold sm:inline-flex"
@@ -165,7 +167,7 @@ export default async function LandingSurfacePage() {
               data-testid="navbar-cta-book"
               style={{
                 backgroundColor: "var(--primary-600)",
-                color: "var(--surface-white)",
+                color: "var(--primary-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="inline-flex min-h-[40px] items-center px-3.5 py-1.5 text-xs font-bold transition-opacity hover:opacity-95"
@@ -182,8 +184,8 @@ export default async function LandingSurfacePage() {
         <section
           aria-labelledby="hero-heading"
           style={{
-            backgroundColor: "var(--navy-900)",
-            color: "var(--surface-white)",
+            backgroundColor: "var(--brand-navy-deep)",
+            color: "var(--on-dark-fg)",
           }}
           className="border-b px-4 py-12 sm:px-6 lg:py-20"
         >
@@ -193,7 +195,7 @@ export default async function LandingSurfacePage() {
                 <span
                   style={{
                     backgroundColor: "var(--accent-500)",
-                    color: "var(--navy-900)",
+                    color: "var(--on-amber-fg)",
                     borderRadius: "var(--radius-badge)",
                   }}
                   className="px-3 py-1 text-xs font-extrabold uppercase"
@@ -302,7 +304,7 @@ export default async function LandingSurfacePage() {
                     data-testid="hero-search-submit"
                     style={{
                       backgroundColor: "var(--primary-600)",
-                      color: "var(--surface-white)",
+                      color: "var(--primary-fg)",
                       borderRadius: "var(--radius-control)",
                     }}
                     className="flex min-h-[44px] w-full items-center justify-center px-4 py-2.5 text-sm font-bold transition-opacity hover:opacity-95"
@@ -317,7 +319,7 @@ export default async function LandingSurfacePage() {
             <div className="lg:col-span-5">
               <div
                 style={{
-                  backgroundColor: "var(--navy-800)",
+                  backgroundColor: "var(--brand-navy-mid)",
                   borderColor: "rgb(255 255 255 / 0.16)",
                   borderRadius: "var(--radius-card)",
                   boxShadow: "var(--shadow-elevated)",
@@ -325,7 +327,7 @@ export default async function LandingSurfacePage() {
                 className="space-y-3 overflow-hidden border p-4"
               >
                 <div
-                  style={{ backgroundColor: "var(--surface-white)" }}
+                  style={{ backgroundColor: "#FFFFFF" }}
                   className="relative flex h-56 items-center justify-center rounded-lg p-3"
                 >
                   <img
@@ -340,7 +342,7 @@ export default async function LandingSurfacePage() {
                   <span
                     style={{
                       backgroundColor: "var(--secondary-600)",
-                      color: "var(--surface-white)",
+                      color: "var(--on-dark-fg)",
                       borderRadius: "var(--radius-badge)",
                     }}
                     className="absolute left-3 top-3 px-2.5 py-1 text-[10px] font-extrabold uppercase"
@@ -568,7 +570,7 @@ export default async function LandingSurfacePage() {
                 href={bookUrl}
                 style={{
                   backgroundColor: "var(--primary-600)",
-                  color: "var(--surface-white)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-bold sm:text-sm"
@@ -609,8 +611,8 @@ export default async function LandingSurfacePage() {
                         />
                         <span
                           style={{
-                            backgroundColor: "var(--navy-900)",
-                            color: "var(--surface-white)",
+                            backgroundColor: "var(--brand-navy-deep)",
+                            color: "var(--on-dark-fg)",
                             borderRadius: "var(--radius-badge)",
                           }}
                           className="absolute left-3 top-3 px-2.5 py-1 text-[11px] font-semibold"
@@ -704,7 +706,7 @@ export default async function LandingSurfacePage() {
                         href={detailHref}
                         style={{
                           backgroundColor: "var(--primary-600)",
-                          color: "var(--surface-white)",
+                          color: "var(--primary-fg)",
                           borderRadius: "var(--radius-control)",
                         }}
                         className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-bold"
@@ -756,7 +758,7 @@ export default async function LandingSurfacePage() {
             >
               <span
                 style={{
-                  backgroundColor: "var(--navy-900)",
+                  backgroundColor: "var(--brand-navy-deep)",
                   color: "var(--accent-500)",
                   borderRadius: "var(--radius-badge)",
                 }}
@@ -785,7 +787,7 @@ export default async function LandingSurfacePage() {
             >
               <span
                 style={{
-                  backgroundColor: "var(--navy-900)",
+                  backgroundColor: "var(--brand-navy-deep)",
                   color: "var(--accent-500)",
                   borderRadius: "var(--radius-badge)",
                 }}
@@ -814,7 +816,7 @@ export default async function LandingSurfacePage() {
             >
               <span
                 style={{
-                  backgroundColor: "var(--navy-900)",
+                  backgroundColor: "var(--brand-navy-deep)",
                   color: "var(--accent-500)",
                   borderRadius: "var(--radius-badge)",
                 }}
@@ -1125,12 +1127,12 @@ export default async function LandingSurfacePage() {
         >
           <div
             style={{
-              backgroundColor: "var(--navy-900)",
-              color: "var(--surface-white)",
+              backgroundColor: "var(--brand-navy-deep)",
+              color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-card)",
               boxShadow: "var(--shadow-elevated)",
             }}
-            className="flex flex-col items-start justify-between gap-6 p-8 lg:flex-row lg:items-center"
+            className="flex flex-col items-start justify-between gap-6 border border-white/10 p-8 lg:flex-row lg:items-center"
           >
             <div className="max-w-2xl space-y-2">
               <h2
@@ -1148,7 +1150,7 @@ export default async function LandingSurfacePage() {
                 href={bookUrl}
                 style={{
                   backgroundColor: "var(--accent-500)",
-                  color: "var(--navy-900)",
+                  color: "var(--on-amber-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex min-h-[48px] items-center gap-2 px-5 py-3 text-sm font-extrabold"
@@ -1161,8 +1163,8 @@ export default async function LandingSurfacePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  backgroundColor: "var(--success)",
-                  color: "var(--surface-white)",
+                  backgroundColor: "#15803D",
+                  color: "#FFFFFF",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex min-h-[48px] items-center gap-2 px-5 py-3 text-sm font-bold"

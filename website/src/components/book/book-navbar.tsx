@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { CalendarCheck, CarFront, ShieldCheck, User } from "lucide-react";
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import type { UserRecord } from "@/lib/types";
 
 export function BookNavbar({
@@ -77,8 +78,8 @@ export function BookNavbar({
                       ? "var(--primary-600)"
                       : "transparent",
                     color: isActive
-                      ? "var(--surface-white)"
-                      : "var(--slate-900)",
+                      ? "var(--primary-fg)"
+                      : "var(--fg)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="inline-flex min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-colors hover:opacity-90"
@@ -94,18 +95,19 @@ export function BookNavbar({
         <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <a
             href={landingUrl}
-            style={{ color: "var(--slate-600)" }}
+            style={{ color: "var(--fg-secondary)" }}
             className="hidden min-h-[40px] items-center px-2 text-xs font-bold hover:underline lg:inline-flex"
           >
             Beranda Utama
           </a>
+          <ThemeToggle />
           {user?.role === "admin" ? (
             <a
               href={adminUrl}
               data-testid="goto-admin-panel-link"
               style={{
-                backgroundColor: "var(--navy-900)",
-                color: "var(--surface-white)",
+                backgroundColor: "var(--brand-navy-deep)",
+                color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="inline-flex min-h-[40px] items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
@@ -125,7 +127,7 @@ export function BookNavbar({
       {/* Mobile Sub-Navigation Bar */}
       <nav
         aria-label="Navigasi Seluler"
-        style={{ backgroundColor: "var(--slate-50)" }}
+        style={{ backgroundColor: "var(--bg)" }}
         className="flex items-center justify-around gap-1 overflow-x-auto border-t px-2 py-1.5 md:hidden"
       >
         {navItems.map((item) => {
@@ -149,8 +151,8 @@ export function BookNavbar({
                   ? "var(--primary-600)"
                   : "transparent",
                 color: isActive
-                  ? "var(--surface-white)"
-                  : "var(--slate-600)",
+                  ? "var(--primary-fg)"
+                  : "var(--fg-secondary)",
                 borderRadius: "var(--radius-control)",
               }}
               className="flex min-h-[40px] shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-bold"

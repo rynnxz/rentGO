@@ -533,9 +533,9 @@ export function BookingDetailClient({
               </span>
             </div>
 
-            {/* SVG QRIS Matrix */}
+            {/* SVG QRIS Matrix (Always high-contrast light canvas for camera scanning) */}
             <div
-              style={{ backgroundColor: "var(--surface-white)" }}
+              style={{ backgroundColor: "#FFFFFF" }}
               className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-xl border p-3 shadow-xs"
             >
               <svg
@@ -546,7 +546,7 @@ export function BookingDetailClient({
                 className="h-full w-full"
                 shapeRendering="crispEdges"
               >
-                <rect width="21" height="21" fill="var(--surface-white)" />
+                <rect width="21" height="21" fill="#FFFFFF" />
                 {qrMatrix.map((row, rIdx) =>
                   row.map((cell, cIdx) =>
                     cell ? (
@@ -556,7 +556,7 @@ export function BookingDetailClient({
                         y={rIdx}
                         width={1}
                         height={1}
-                        fill="var(--navy-900)"
+                        fill="#0B1D3A"
                       />
                     ) : null,
                   ),
@@ -568,13 +568,13 @@ export function BookingDetailClient({
                   width="6"
                   height="4"
                   rx="0.8"
-                  fill="var(--primary-600)"
+                  fill="#1D4ED8"
                 />
                 <text
                   x="10.5"
                   y="11.1"
                   textAnchor="middle"
-                  fill="var(--surface-white)"
+                  fill="#FFFFFF"
                   fontSize="2.1"
                   fontWeight="bold"
                   fontFamily="monospace"
@@ -587,7 +587,7 @@ export function BookingDetailClient({
                 <div
                   style={{
                     backgroundColor: "rgb(20 83 45 / 0.88)",
-                    color: "var(--surface-white)",
+                    color: "var(--on-dark-fg)",
                   }}
                   className="absolute inset-0 flex flex-col items-center justify-center rounded-xl p-4 text-center"
                 >
@@ -632,7 +632,7 @@ export function BookingDetailClient({
                 data-testid="simulate-upload-proof-button"
                 style={{
                   backgroundColor: "var(--primary-600)",
-                  color: "var(--surface-white)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="flex min-h-[48px] w-full items-center justify-center gap-2 px-4 py-3 text-sm font-extrabold shadow-sm transition-opacity hover:opacity-95 disabled:opacity-50"
@@ -694,7 +694,7 @@ export function BookingDetailClient({
               data-testid="whatsapp-confirm-link"
               style={{
                 backgroundColor: "var(--success)",
-                color: "var(--surface-white)",
+                color: "var(--on-dark-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="flex min-h-[46px] w-full items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold sm:text-sm"

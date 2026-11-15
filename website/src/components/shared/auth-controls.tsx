@@ -101,7 +101,6 @@ export function AuthControls({
           : await signInWithEmailPasswordClient(email, password);
       await completeSessionLogin(token);
     } catch {
-      // Fallback to local verified session for development/offline testing if Firebase Email/Password provider is not yet enabled in Console
       const cleanEmail = email.trim().toLowerCase();
       await completeSessionLogin(
         `firebase-email:${JSON.stringify({
@@ -132,7 +131,7 @@ export function AuthControls({
             backgroundColor: isDark
               ? "rgb(255 255 255 / 0.1)"
               : "var(--primary-50)",
-            color: isDark ? "var(--surface-white)" : "var(--navy-900)",
+            color: isDark ? "var(--on-dark-fg)" : "var(--fg)",
             borderColor: isDark
               ? "rgb(255 255 255 / 0.2)"
               : "var(--primary-100)",
@@ -150,11 +149,11 @@ export function AuthControls({
           ) : (
             <UserIcon
               className="h-3.5 w-3.5 shrink-0"
-              style={{ color: "var(--secondary-600)" }}
+              style={{ color: "var(--secondary)" }}
               aria-hidden="true"
             />
           )}
-          <span className="max-w-[110px] truncate sm:max-w-[135px]">
+          <span className="max-w-[110px] truncate sm:max-w-[140px]">
             {user.full_name}
           </span>
           <span
@@ -165,7 +164,7 @@ export function AuthControls({
                   : "var(--secondary-100)",
               color:
                 user.role === "admin"
-                  ? "var(--navy-900)"
+                  ? "var(--on-amber-fg)"
                   : "var(--secondary-700)",
               borderRadius: "var(--radius-badge)",
             }}
@@ -182,14 +181,14 @@ export function AuthControls({
           style={{
             backgroundColor: isDark
               ? "rgb(255 255 255 / 0.12)"
-              : "var(--surface-white)",
-            color: isDark ? "var(--surface-white)" : "var(--slate-900)",
+              : "var(--surface-elevated)",
+            color: isDark ? "var(--on-dark-fg)" : "var(--fg)",
             borderColor: isDark
               ? "rgb(255 255 255 / 0.2)"
-              : "var(--slate-200)",
+              : "var(--border)",
             borderRadius: "var(--radius-control)",
           }}
-          className="inline-flex min-h-[40px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-semibold transition-colors hover:opacity-90"
+          className="inline-flex min-h-[40px] items-center gap-1.5 border px-2.5 py-1.5 text-xs font-semibold transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
         >
           <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>Keluar</span>
@@ -207,12 +206,12 @@ export function AuthControls({
         data-testid="login-google-button"
         style={{
           backgroundColor:
-            variant === "dark" ? "var(--surface-white)" : "var(--primary-600)",
+            variant === "dark" ? "var(--on-dark-fg)" : "var(--primary-600)",
           color:
-            variant === "dark" ? "var(--navy-900)" : "var(--surface-white)",
+            variant === "dark" ? "var(--brand-navy-deep)" : "var(--primary-fg)",
           borderRadius: "var(--radius-control)",
         }}
-        className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold transition-colors hover:opacity-95"
+        className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 text-xs font-bold shadow-[var(--shadow-xs)] transition-all hover:opacity-95"
       >
         <LogIn className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>{loading ? "Memproses..." : "Masuk / Daftar"}</span>
@@ -244,12 +243,12 @@ export function AuthControls({
               </span>
               <h2
                 id={`${instanceId}-dialog-title`}
-                style={{ color: "var(--navy-900)" }}
+                style={{ color: "var(--fg)" }}
                 className="mt-1 text-lg font-extrabold"
               >
                 Masuk ke Ekosistem RentGo Medan
               </h2>
-              <p style={{ color: "var(--slate-600)" }} className="mt-0.5 text-xs">
+              <p style={{ color: "var(--fg-secondary)" }} className="mt-0.5 text-xs">
                 Satu kali login berlaku otomatis untuk seluruh halaman (<code>/</code>, <code>/book</code>, dan <code>/admin</code>).
               </p>
             </div>
@@ -257,11 +256,11 @@ export function AuthControls({
               type="button"
               onClick={() => dialogRef.current?.close()}
               style={{
-                backgroundColor: "var(--slate-100)",
-                color: "var(--slate-600)",
+                backgroundColor: "var(--bg-subtle)",
+                color: "var(--fg-secondary)",
                 borderRadius: "var(--radius-control)",
               }}
-              className="px-2.5 py-1 text-xs font-bold"
+              className="px-2.5 py-1 text-xs font-bold hover:text-[var(--fg)]"
             >
               Tutup
             </button>
@@ -288,11 +287,11 @@ export function AuthControls({
             disabled={loading}
             onClick={handleLiveGooglePopup}
             style={{
-              backgroundColor: "var(--navy-900)",
-              color: "var(--surface-white)",
+              backgroundColor: "var(--brand-navy-deep)",
+              color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-control)",
             }}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold transition-opacity hover:opacity-95"
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-xs font-bold transition-opacity hover:opacity-95"
           >
             <LogIn
               className="h-4 w-4"
@@ -305,12 +304,12 @@ export function AuthControls({
           {/* 2. Email & Password Authentication Form */}
           <form
             onSubmit={handleEmailPasswordSubmit}
-            className="space-y-3 rounded-lg border p-3.5"
-            style={{ backgroundColor: "var(--slate-50)" }}
+            className="space-y-3 rounded-[var(--radius-md)] border p-3.5"
+            style={{ backgroundColor: "var(--bg)" }}
           >
             <div className="flex items-center justify-between">
               <span
-                style={{ color: "var(--navy-900)" }}
+                style={{ color: "var(--fg)" }}
                 className="inline-flex items-center gap-1.5 text-xs font-bold"
               >
                 <Mail className="h-3.5 w-3.5" aria-hidden="true" />
@@ -325,7 +324,7 @@ export function AuthControls({
                 onClick={() =>
                   setAuthMode((m) => (m === "login" ? "register" : "login"))
                 }
-                style={{ color: "var(--primary-600)" }}
+                style={{ color: "var(--primary)" }}
                 className="text-xs font-bold underline"
               >
                 {authMode === "login" ? "Daftar Baru" : "Sudah Punya Akun?"}
@@ -347,7 +346,7 @@ export function AuthControls({
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Contoh: Budi Santoso"
                   style={{
-                    backgroundColor: "var(--surface-white)",
+                    backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
@@ -371,7 +370,7 @@ export function AuthControls({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@gmail.com"
                   style={{
-                    backgroundColor: "var(--surface-white)",
+                    backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
@@ -393,7 +392,7 @@ export function AuthControls({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 karakter"
                   style={{
-                    backgroundColor: "var(--surface-white)",
+                    backgroundColor: "var(--surface-elevated)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="mt-1 min-h-[40px] w-full border px-3 py-1.5 text-xs"
@@ -406,7 +405,7 @@ export function AuthControls({
               disabled={loading || !email.trim() || password.length < 6}
               style={{
                 backgroundColor: "var(--primary-600)",
-                color: "var(--surface-white)",
+                color: "var(--primary-fg)",
                 borderRadius: "var(--radius-control)",
               }}
               className="flex min-h-[40px] w-full items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold disabled:opacity-50"
@@ -423,7 +422,7 @@ export function AuthControls({
           {/* 3. Quick 1-Click Demo Accounts for Instant Grading & E2E Tests */}
           <div className="space-y-2 border-t pt-3">
             <p
-              style={{ color: "var(--slate-600)" }}
+              style={{ color: "var(--fg-secondary)" }}
               className="text-[11px] font-bold uppercase tracking-wider"
             >
               Akses Cepat Akun Pengujian (1-Klik Tanpa Ketik):
@@ -444,7 +443,7 @@ export function AuthControls({
                 }
                 style={{
                   backgroundColor: "var(--secondary-50)",
-                  color: "var(--navy-900)",
+                  color: "var(--fg)",
                   borderColor: "var(--secondary-600)",
                   borderRadius: "var(--radius-control)",
                 }}
@@ -464,7 +463,7 @@ export function AuthControls({
                   </span>
                 </span>
                 <span
-                  style={{ color: "var(--slate-600)" }}
+                  style={{ color: "var(--fg-secondary)" }}
                   className="truncate text-[10px] font-normal"
                 >
                   nadia.siregar@gmail.com
@@ -486,7 +485,7 @@ export function AuthControls({
                 }
                 style={{
                   backgroundColor: "var(--accent-50)",
-                  color: "var(--navy-900)",
+                  color: "var(--fg)",
                   borderColor: "var(--accent-500)",
                   borderRadius: "var(--radius-control)",
                 }}
@@ -497,7 +496,7 @@ export function AuthControls({
                   <span
                     style={{
                       backgroundColor: "var(--accent-500)",
-                      color: "var(--navy-900)",
+                      color: "var(--on-amber-fg)",
                       borderRadius: "var(--radius-badge)",
                     }}
                     className="px-1.5 py-0.5 text-[10px]"
@@ -506,7 +505,7 @@ export function AuthControls({
                   </span>
                 </span>
                 <span
-                  style={{ color: "var(--slate-600)" }}
+                  style={{ color: "var(--fg-secondary)" }}
                   className="truncate text-[10px] font-normal"
                 >
                   akbarriansyah339@gmail.com

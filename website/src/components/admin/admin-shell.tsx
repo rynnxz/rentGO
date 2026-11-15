@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { RentGoLogo } from "@/components/shared/logo";
 import { AuthControls } from "@/components/shared/auth-controls";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import type { UserRecord } from "@/lib/types";
 
 const NAV_ITEMS = [
@@ -80,11 +81,12 @@ export function AdminShell({
         className="flex min-h-screen flex-col justify-between"
       >
         <header
-          style={{ backgroundColor: "var(--navy-900)" }}
+          style={{ backgroundColor: "var(--brand-navy-deep)" }}
           className="sticky top-0 z-40 border-b px-6 py-4 shadow-xs"
         >
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
+            <ThemeToggle />
           </div>
         </header>
 
@@ -147,12 +149,15 @@ export function AdminShell({
         className="flex min-h-screen flex-col justify-between"
       >
         <header
-          style={{ backgroundColor: "var(--navy-900)" }}
+          style={{ backgroundColor: "var(--brand-navy-deep)" }}
           className="sticky top-0 z-40 border-b px-6 py-4 shadow-xs"
         >
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <RentGoLogo surfaceLabel="Admin Panel" variant="dark" />
-            <AuthControls user={user} variant="dark" />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <AuthControls user={user} variant="dark" />
+            </div>
           </div>
         </header>
 
@@ -206,7 +211,7 @@ export function AdminShell({
                 href={bookSurfaceUrl}
                 style={{
                   backgroundColor: "var(--primary-600)",
-                  color: "var(--surface-white)",
+                  color: "var(--on-dark-fg)",
                   borderRadius: "var(--radius-control)",
                 }}
                 className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-sm font-semibold"
@@ -240,8 +245,8 @@ export function AdminShell({
       {/* Desktop Sticky Sidebar (Locked to viewport height, never scrolls away) */}
       <aside
         style={{
-          backgroundColor: "var(--navy-900)",
-          color: "var(--surface-white)",
+          backgroundColor: "var(--brand-navy-deep)",
+          color: "var(--on-dark-fg)",
         }}
         className="hidden w-68 shrink-0 flex-col justify-between border-r p-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto"
       >
@@ -274,7 +279,7 @@ export function AdminShell({
                     backgroundColor: isActive
                       ? "var(--primary-600)"
                       : "transparent",
-                    color: "var(--surface-white)",
+                    color: "var(--on-dark-fg)",
                     borderColor: isActive
                       ? "var(--accent-500)"
                       : "transparent",
@@ -287,7 +292,7 @@ export function AdminShell({
                     style={{
                       color: isActive
                         ? "var(--accent-500)"
-                        : "var(--secondary-100)",
+                        : "#CCFBF1",
                     }}
                     aria-hidden="true"
                   />
@@ -350,8 +355,8 @@ export function AdminShell({
                   aria-expanded={mobileDrawerOpen}
                   aria-label="Toggle Menu Navigasi Admin"
                   style={{
-                    backgroundColor: "var(--navy-900)",
-                    color: "var(--surface-white)",
+                    backgroundColor: "var(--brand-navy-deep)",
+                    color: "var(--on-dark-fg)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="inline-flex h-10 w-10 items-center justify-center"
@@ -377,7 +382,10 @@ export function AdminShell({
               </div>
             </div>
 
-            <AuthControls user={user} variant="light" />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <AuthControls user={user} variant="light" />
+            </div>
           </div>
 
           {/* Mobile Horizontal Quick-Nav Bar (Always accessible on phones/tablets) */}
@@ -427,8 +435,8 @@ export function AdminShell({
           {mobileDrawerOpen ? (
             <div
               style={{
-                backgroundColor: "var(--navy-900)",
-                color: "var(--surface-white)",
+                backgroundColor: "var(--brand-navy-deep)",
+                color: "var(--on-dark-fg)",
               }}
               className="border-t p-4 lg:hidden"
             >

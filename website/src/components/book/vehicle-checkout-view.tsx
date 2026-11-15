@@ -718,7 +718,7 @@ export function VehicleCheckoutView({
                   data-testid="submit-booking-button"
                   style={{
                     backgroundColor: "var(--primary-600)",
-                    color: "var(--surface-white)",
+                    color: "var(--on-dark-fg)",
                     borderRadius: "var(--radius-control)",
                   }}
                   className="flex min-h-[48px] w-full items-center justify-center gap-2 px-5 py-3 text-sm font-bold transition-opacity hover:opacity-95 disabled:opacity-50"

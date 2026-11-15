@@ -66,7 +66,7 @@ export default async function AdminDashboardPage() {
             href="/admin/vehicles"
             style={{
               backgroundColor: "var(--primary-600)",
-              color: "var(--surface-white)",
+              color: "var(--on-dark-fg)",
               borderRadius: "var(--radius-control)",
             }}
             className="inline-flex min-h-[44px] items-center px-4 py-2 text-xs font-semibold sm:text-sm"
@@ -330,7 +330,7 @@ export default async function AdminDashboardPage() {
                       backgroundColor:
                         idx === 0 ? "var(--accent-500)" : "var(--primary-50)",
                       color:
-                        idx === 0 ? "var(--navy-900)" : "var(--primary-700)",
+                        idx === 0 ? "var(--on-amber-fg)" : "var(--primary-700)",
                       borderRadius: "var(--radius-badge)",
                     }}
                     className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold tabular-nums"

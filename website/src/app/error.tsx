@@ -31,7 +31,7 @@ export default function GlobalError({
           onClick={reset}
           style={{
             backgroundColor: "var(--primary-600)",
-            color: "var(--surface-white)",
+            color: "var(--on-dark-fg)",
             borderRadius: "var(--radius-control)",
           }}
           className="mt-5 inline-flex min-h-[44px] items-center px-5 py-2.5 text-sm font-semibold"
