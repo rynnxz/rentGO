@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createBooking,
   createMaintenanceLog,
@@ -161,5 +161,36 @@ describe("Availability Overlap, Maintenance Blocking, & Concurrency Anti-Double-
     const refreshedPaidBooking = await getBookingById(paidPendingBooking.id);
     expect(refreshedPaidBooking?.status).toBe("pending");
     expect(refreshedPaidBooking?.payment?.status).toBe("paid");
+  });
+
+  it("never calls mkdir inside process.cwd() on Vercel and falls back to in-memory seed if tmpdir fails", async () => {
+    const prevVercel = process.env.VERCEL;
+    process.env.VERCEL = "1";
+    setLocalStoreFilePathForTests(null);
+
+    const mkdirSpy = vi.spyOn(fs, "mkdirSync").mockImplementation((target) => {
+      if (String(target).startsWith(process.cwd())) {
+        throw new Error(`Unexpected mkdir in cwd: ${String(target)}`);
+      }
+      const err = Object.assign(new Error("EROFS: read-only file system"), {
+        code: "EROFS",
+      });
+      throw err;
+    });
+
+    try {
+      const vehicles = await listVehicles({ status: "active" });
+      expect(vehicles.length).toBeGreaterThan(0);
+      for (const call of mkdirSpy.mock.calls) {
+        expect(String(call[0]).startsWith(process.cwd())).toBe(false);
+      }
+    } finally {
+      mkdirSpy.mockRestore();
+      if (prevVercel === undefined) {
+        delete process.env.VERCEL;
+      } else {
+        process.env.VERCEL = prevVercel;
+      }
+    }
   });
 });

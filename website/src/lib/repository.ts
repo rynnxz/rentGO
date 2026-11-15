@@ -1,5 +1,6 @@
 import "server-only";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { getAdminEmails, hasSupabaseServiceCredentials } from "./env";
@@ -537,8 +538,17 @@ export function setLocalStoreFilePathForTests(filePath: string | null): void {
   customDataFilePath = filePath;
 }
 
+function isReadOnlyServerlessRuntime(): boolean {
+  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+function getTmpStoreFilePath(): string {
+  return path.join(os.tmpdir(), "rentgo-data", "rentgo-local.json");
+}
+
 function getStoreFilePath(): string {
   if (customDataFilePath) return customDataFilePath;
+  if (isReadOnlyServerlessRuntime()) return getTmpStoreFilePath();
   return path.join(process.cwd(), ".data", "rentgo-local.json");
 }
 
@@ -567,6 +577,81 @@ function syncRealVehiclePhotos(state: LocalDatabaseState): boolean {
 let transactionLock: Promise<void> = Promise.resolve();
 let lastCloudFetchAt = 0;
 let cachedCloudState: LocalDatabaseState | null = null;
+let memoryFallbackState: LocalDatabaseState | null = null;
+
+function readOrSeedFileAtPath(filePath: string): LocalDatabaseState {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(filePath)) {
+    const seed = createInitialSeedState();
+    fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), "utf8");
+    return seed;
+  }
+  const state = JSON.parse(fs.readFileSync(filePath, "utf8")) as LocalDatabaseState;
+  if (syncRealVehiclePhotos(state)) {
+    fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
+  }
+  return state;
+}
+
+function writeFileAtPath(filePath: string, state: LocalDatabaseState): void {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
+}
+
+function readLocalFallbackState(): LocalDatabaseState {
+  if (customDataFilePath) {
+    return readOrSeedFileAtPath(customDataFilePath);
+  }
+  const primaryPath = getStoreFilePath();
+  try {
+    const state = readOrSeedFileAtPath(primaryPath);
+    memoryFallbackState = state;
+    return state;
+  } catch {
+    const tmpPath = getTmpStoreFilePath();
+    if (tmpPath !== primaryPath) {
+      try {
+        const state = readOrSeedFileAtPath(tmpPath);
+        memoryFallbackState = state;
+        return state;
+      } catch {
+        // Fall back to in-memory seed when even tmpdir is unavailable
+      }
+    }
+    if (!memoryFallbackState) {
+      memoryFallbackState = createInitialSeedState();
+    }
+    return memoryFallbackState;
+  }
+}
+
+function writeLocalFallbackState(state: LocalDatabaseState): void {
+  if (customDataFilePath) {
+    writeFileAtPath(customDataFilePath, state);
+    return;
+  }
+  memoryFallbackState = state;
+  const primaryPath = getStoreFilePath();
+  try {
+    writeFileAtPath(primaryPath, state);
+    return;
+  } catch {
+    const tmpPath = getTmpStoreFilePath();
+    if (tmpPath !== primaryPath) {
+      try {
+        writeFileAtPath(tmpPath, state);
+      } catch {
+        // Ignore read-only filesystem errors when cloud or in-memory state holds data
+      }
+    }
+  }
+}
 
 async function syncStateToSupabase(state: LocalDatabaseState): Promise<void> {
   if (customDataFilePath || !hasSupabaseServiceCredentials()) return;
@@ -622,11 +707,6 @@ async function withStoreTransaction<T>(
 
   await prevLock;
   try {
-    const filePath = getStoreFilePath();
-    const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
     let state: LocalDatabaseState;
     const cloud =
       !customDataFilePath && hasSupabaseServiceCredentials()
@@ -635,17 +715,12 @@ async function withStoreTransaction<T>(
     if (cloud && cloud.vehicles.length > 0) {
       state = cloud;
       syncRealVehiclePhotos(state);
-    } else if (!fs.existsSync(filePath)) {
-      state = createInitialSeedState();
-      fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
     } else {
-      const raw = fs.readFileSync(filePath, "utf8");
-      state = JSON.parse(raw) as LocalDatabaseState;
-      syncRealVehiclePhotos(state);
+      state = readLocalFallbackState();
     }
 
     const result = await fn(state);
-    fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
+    writeLocalFallbackState(state);
     await syncStateToSupabase(state);
     return result;
   } finally {
@@ -662,21 +737,7 @@ function readStoreSnapshot(): LocalDatabaseState {
   ) {
     return cachedCloudState;
   }
-  const filePath = getStoreFilePath();
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(filePath)) {
-    const seed = createInitialSeedState();
-    fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), "utf8");
-    return seed;
-  }
-  const state = JSON.parse(fs.readFileSync(filePath, "utf8")) as LocalDatabaseState;
-  if (syncRealVehiclePhotos(state)) {
-    fs.writeFileSync(filePath, JSON.stringify(state, null, 2), "utf8");
-  }
-  return state;
+  return readLocalFallbackState();
 }
 
 async function readStoreSnapshotAsync(): Promise<LocalDatabaseState> {
@@ -796,21 +857,21 @@ export async function upsertUserFromAuth(params: {
 }
 
 export async function getUserById(userId: string): Promise<UserRecord | null> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return state.users.find((u) => u.id === userId) ?? null;
 }
 
 export async function getUserByFirebaseUid(
   firebaseUid: string,
 ): Promise<UserRecord | null> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return state.users.find((u) => u.firebase_uid === firebaseUid) ?? null;
 }
 
 export async function listUsers(): Promise<
   Array<UserRecord & { total_bookings: number }>
 > {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return state.users
     .map((u) => ({
       ...u,
@@ -1042,7 +1103,7 @@ export async function listVehicles(params?: {
 export async function getVehicleById(
   id: string,
 ): Promise<VehicleWithCategory | null> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   const vehicle = state.vehicles.find((v) => v.id === id && v.deleted_at === null);
   if (!vehicle) return null;
   return enrichVehicle(vehicle, state.vehicle_categories);
@@ -1056,7 +1117,7 @@ export async function getVehicleBlockedRanges(vehicleId: string): Promise<
     label: string;
   }>
 > {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   const blocked: Array<{
     start_date: string;
     end_date: string;
@@ -1349,7 +1410,7 @@ export async function listBookings(params?: {
   vehicleId?: string;
   search?: string;
 }): Promise<BookingDetailView[]> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   let items = state.bookings.map((b) => enrichBooking(b, state));
 
   if (params?.userId) {
@@ -1379,7 +1440,7 @@ export async function listBookings(params?: {
 export async function getBookingById(
   bookingId: string,
 ): Promise<BookingDetailView | null> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   const booking = state.bookings.find((b) => b.id === bookingId);
   if (!booking) return null;
   return enrichBooking(booking, state);
@@ -1494,7 +1555,7 @@ export async function updateBookingPayment(params: {
 // ============================================================================
 
 export async function listMaintenanceLogs(): Promise<MaintenanceWithVehicle[]> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return state.maintenance_logs
     .map((m) => {
       const v = state.vehicles.find((veh) => veh.id === m.vehicle_id);
@@ -1661,7 +1722,7 @@ export async function runHousekeepingTasks(now: Date = new Date()): Promise<{
 }
 
 export async function getAdminDashboardStats(todayWib: string = getTodayWib()) {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   const activeFleet = state.vehicles.filter((v) => v.deleted_at === null);
   const availableToday = filterAvailableVehicles({
     vehicles: activeFleet,
@@ -1772,7 +1833,7 @@ export async function getAdminDashboardStats(todayWib: string = getTodayWib()) {
 export async function countAiRequestsInLastMinute(
   windowMs: number = 60_000,
 ): Promise<number> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   const cutoffMs = Date.now() - windowMs;
   return state.ai_recommendation_logs.filter((log) => {
     const t = Date.parse(log.created_at);
@@ -1784,7 +1845,7 @@ export async function countUserAiRequestsToday(
   userId: string,
   todayWib: string = getTodayWib(),
 ): Promise<number> {
-  const state = readStoreSnapshot();
+  const state = await readStoreSnapshotAsync();
   return state.ai_recommendation_logs.filter(
     (log) => log.user_id === userId && log.created_at.slice(0, 10) === todayWib,
   ).length;

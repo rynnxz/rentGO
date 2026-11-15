@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getEnv, hasSupabaseServiceCredentials } from "@/lib/env";
 import { AuthError, requireAuthenticatedUser } from "@/lib/rbac";
+import { getSupabaseServiceClient } from "@/lib/supabase-server";
 
 const ALLOWED_MIME_EXT: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -61,35 +62,40 @@ export async function POST(request: NextRequest) {
     if (hasSupabaseServiceCredentials()) {
       try {
         const env = getEnv();
-        const bucket = env.SUPABASE_STORAGE_BUCKET || "rentgo-media";
+        const bucket = env.SUPABASE_STORAGE_BUCKET || "vehicles";
         const objectPath = `${folder}/${safeFileName}`;
-        const uploadRes = await fetch(
-          `${env.SUPABASE_URL}/storage/v1/object/${bucket}/${objectPath}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-              "Content-Type": file.type,
-              "x-upsert": "true",
-            },
-            body: bytes,
-            signal: AbortSignal.timeout(4000),
-          },
-        );
-        if (uploadRes.ok) {
-          const publicUrl = `${env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${objectPath}`;
-          return NextResponse.json(
-            { url: publicUrl, storage: "supabase-cloud" },
-            { status: 201 },
-          );
+        const sb = getSupabaseServiceClient();
+        if (sb) {
+          const { error: uploadErr } = await sb.storage
+            .from(bucket)
+            .upload(objectPath, bytes, {
+              contentType: file.type,
+              upsert: true,
+            });
+          if (!uploadErr) {
+            const { data } = sb.storage.from(bucket).getPublicUrl(objectPath);
+            return NextResponse.json(
+              { url: data.publicUrl, storage: "supabase-cloud" },
+              { status: 201 },
+            );
+          }
         }
       } catch {
         // Fallback to local public/uploads storage
       }
     }
 
-    // 2. Local persistent fallback storage in public/uploads
+    // 2. Local persistent fallback storage in public/uploads (not writable on Vercel serverless)
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return NextResponse.json(
+        {
+          error:
+            "Unggah berkas ke Supabase Storage gagal atau SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di Vercel.",
+        },
+        { status: 503 },
+      );
+    }
+
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
